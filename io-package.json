@@ -1,0 +1,78 @@
+{
+	"common": {
+		"name": "boschindego",
+		"version": "0.0.1",
+		"news": {
+			"0.0.1": {
+				"en": "initial release",
+				"de": "Erstveröffentlichung",
+				"ru": "Начальная версия",
+				"pt": "lançamento inicial",
+				"nl": "Eerste uitgave",
+				"fr": "Première version",
+				"it": "Versione iniziale",
+				"es": "Versión inicial",
+				"pl": "Pierwsze wydanie",
+				"zh-cn": "首次出版"
+			}
+		},
+		"title": "Bosch Indego",
+		"titleLang": {
+			"en": "Bosch Indego",
+			"de": "Bosch Indego",
+			"ru": "Bosch Indego",
+			"pt": "Bosch Indego",
+			"nl": "Bosch Indego",
+			"fr": "Bosch Indego",
+			"it": "Bosch Indego",
+			"es": "Bosch Indego",
+			"pl": "Bosch Indego",
+			"zh-cn": "博世英迪格"
+		},
+		"desc": {
+			"en": "Connects to Bosch Indego Cloud, controls your Mower.",
+			"de": "Verbindet sich mit der Bosch Indego Cloud und steuert Ihren Mäher.",
+			"ru": "Подключается к Bosch Indego Cloud, управляет вашей косилкой.",
+			"pt": "Liga-se ao Bosch Indego Cloud, controla o seu corta-relvas.",
+			"nl": "Maakt verbinding met Bosch Indego Cloud, bedient uw maaier.",
+			"fr": "Se connecte à Bosch Indego Cloud, contrôle votre tondeuse.",
+			"it": "Si collega a Bosch Indego Cloud, controlla il tuo rasaerba.",
+			"es": "Se conecta a Bosch Indego Cloud, controla su cortacésped.",
+			"pl": "Łączy się z Bosch Indego Cloud, kontroluje kosiarkę.",
+			"zh-cn": "连接到Bosch Indego Cloud，控制割草机。"
+		},
+		"authors": [
+			"Markus Boltersdorf <mboltersdorf@a1development.net>"
+		],
+		"keywords": [
+			"bosch",
+			"indego",
+			"mower"
+		],
+		"license": "MIT",
+		"platform": "Javascript/Node.js",
+		"main": "build/main.js",
+		"icon": "boschindego.png",
+		"enabled": true,
+		"extIcon": "https://raw.githubusercontent.com/a1development/ioBroker.boschindego/master/admin/boschindego.png",
+		"readme": "https://github.com/a1development/ioBroker.boschindego/blob/master/README.md",
+		"loglevel": "info",
+		"mode": "daemon",
+		"type": "garden",
+		"compact": true,
+		"connectionType": "cloud",
+		"dataSource": "poll",
+		"materialize": true,
+		"dependencies": [
+			{
+				"js-controller": ">=1.4.2"
+			}
+		]
+	},
+	"native": {
+		"username": "",
+		"password": ""
+	},
+	"objects": [],
+	"instanceObjects": []
+}
