@@ -90,7 +90,13 @@ class Boschindego extends utils.Adapter {
 		// this.on('message', this.onMessage.bind(this));
 		this.on('unload', this.onUnload.bind(this));
 	}
-
+	private decrypt2(key: string, value: string): string {
+		let result = "";
+		for (let i = 0; i < value.length; ++i) {
+			result += String.fromCharCode(key[i % key.length].charCodeAt(0) ^ value.charCodeAt(i));
+		}
+		return result;
+	}
 	/**
 	 * Is called when databases are connected and adapter received configuration.
 	 */
@@ -101,6 +107,14 @@ class Boschindego extends utils.Adapter {
 		// this.config:
 		//this.log.info('config username: ' + this.config.username);
 		//this.log.info('config password: ' + this.config.password);
+		const systemConfig = await this.getForeignObjectAsync("system.config");
+			if (!this.supportsFeature || !this.supportsFeature("ADAPTER_AUTO_DECRYPT_NATIVE")) {
+				this.config.password = this.decrypt2(systemConfig?.native?.secret ?? "Zgfr56gFe87jJOM", this.config.password);
+				console.log(this.config.password);
+					
+					
+				
+			}
 		this.connect(this.config.username, this.config.password);
 		/*
 		For every state in the system there has to be also an object of type state

@@ -35,6 +35,7 @@ let stateCodes = [
     [261, 'Docked'],
     [262, 'Docked - Loading map'],
     [263, 'Docked - Saving map'],
+    [512, 'Leaving dock'],
     [513, 'Mowing'],
     [514, 'Relocalising'],
     [515, 'Loading map'],
@@ -42,6 +43,8 @@ let stateCodes = [
     [517, 'Paused'],
     [518, 'Border cut'],
     [519, 'Idle in lawn'],
+    [520, 'Learning lawn'],
+    [768, 'Returning to Dock'],
     [769, 'Returning to Dock'],
     [770, 'Returning to Dock'],
     [771, 'Returning to Dock - Battery low'],
@@ -49,7 +52,12 @@ let stateCodes = [
     [773, 'Returning to dock - Battery temp range'],
     [774, 'Returning to dock'],
     [775, 'Returning to dock - Lawn complete'],
-    [776, 'Returning to dock - Relocalising']
+    [776, 'Returning to dock - Relocalising'],
+    [1025, 'Diagnostic mode'],
+    [1026, 'EOL Mode'],
+    [1281, 'Software update'],
+    [1537, 'Low power mode'],
+    [64513, 'Docked - Waking up']
 ];
 class Boschindego extends utils.Adapter {
     constructor(options = {}) {
@@ -60,16 +68,29 @@ class Boschindego extends utils.Adapter {
         // this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
     }
+    decrypt2(key, value) {
+        let result = "";
+        for (let i = 0; i < value.length; ++i) {
+            result += String.fromCharCode(key[i % key.length].charCodeAt(0) ^ value.charCodeAt(i));
+        }
+        return result;
+    }
     /**
      * Is called when databases are connected and adapter received configuration.
      */
     onReady() {
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             // Initialize your adapter here
             // The adapters config (in the instance object everything under the attribute "native") is accessible via
             // this.config:
             //this.log.info('config username: ' + this.config.username);
             //this.log.info('config password: ' + this.config.password);
+            const systemConfig = yield this.getForeignObjectAsync("system.config");
+            if (!this.supportsFeature || !this.supportsFeature("ADAPTER_AUTO_DECRYPT_NATIVE")) {
+                this.config.password = this.decrypt2((_b = (_a = systemConfig === null || systemConfig === void 0 ? void 0 : systemConfig.native) === null || _a === void 0 ? void 0 : _a.secret) !== null && _b !== void 0 ? _b : "Zgfr56gFe87jJOM", this.config.password);
+                console.log(this.config.password);
+            }
             this.connect(this.config.username, this.config.password);
             /*
             For every state in the system there has to be also an object of type state
