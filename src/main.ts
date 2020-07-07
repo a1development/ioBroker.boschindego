@@ -19,39 +19,40 @@ let currentStateCode = 0;
 let refreshMode = 1;
 
 let connected = false;
+let firstRun = true;
 
-let stateCodes = [
-	[0, 'Reading status'],
-	[257, 'Charging'],
-	[258, 'Docked'],
-	[259, 'Docked - Software update'],
-	[260, 'Docked - Charging'],
-	[261, 'Docked'],
-	[262, 'Docked - Loading map'],
-	[263, 'Docked - Saving map'],
-	[512, 'Leaving dock'],
-	[513, 'Mowing'],
-	[514, 'Relocalising'],
-	[515, 'Loading map'],
-	[516, 'Learning lawn'],
-	[517, 'Paused'],
-	[518, 'Border cut'],
-	[519, 'Idle in lawn'],
-	[520, 'Learning lawn'],
-	[768, 'Returning to Dock'],
-	[769, 'Returning to Dock'],
-	[770, 'Returning to Dock'],
-	[771, 'Returning to Dock - Battery low'],
-	[772, 'Returning to dock - Calendar timeslot ended'],
-	[773, 'Returning to dock - Battery temp range'],
-	[774, 'Returning to dock'],
-	[775, 'Returning to dock - Lawn complete'],
-	[776, 'Returning to dock - Relocalising'],
-	[1025, 'Diagnostic mode'],
-	[1026, 'EOL Mode'],
-	[1281, 'Software update'],
-	[1537, 'Low power mode'],
-	[64513, 'Docked - Waking up']
+let stateCodes = [ 
+	[0, 'Reading status',0],
+	[257, 'Charging',0],
+	[258, 'Docked',0],
+	[259, 'Docked - Software update',0],
+	[260, 'Docked - Charging',0],
+	[261, 'Docked',0],
+	[262, 'Docked - Loading map',0],
+	[263, 'Docked - Saving map',0],
+	[512, 'Leaving dock',1],
+	[513, 'Mowing',1],
+	[514, 'Relocalising',1],
+	[515, 'Loading map',1],
+	[516, 'Learning lawn',1],
+	[517, 'Paused',0],
+	[518, 'Border cut',1],
+	[519, 'Idle in lawn',0],
+	[520, 'Learning lawn',1],
+	[768, 'Returning to Dock',1],
+	[769, 'Returning to Dock',1],
+	[770, 'Returning to Dock',1],
+	[771, 'Returning to Dock - Battery low',1],
+	[772, 'Returning to dock - Calendar timeslot ended',1],
+	[773, 'Returning to dock - Battery temp range',1],
+	[774, 'Returning to dock',1],
+	[775, 'Returning to dock - Lawn complete',1],
+	[776, 'Returning to dock - Relocalising',1],
+	[1025, 'Diagnostic mode',0],
+	[1026, 'EOL Mode',0],
+	[1281, 'Software update',0],
+	[1537, 'Low power mode',0],
+	[64513, 'Docked - Waking up',0]
 	 
 ]
 
@@ -104,34 +105,21 @@ class Boschindego extends utils.Adapter {
 		// Initialize your adapter here
 		
 		// The adapters config (in the instance object everything under the attribute "native") is accessible via
-		// this.config:
-		//this.log.info('config username: ' + this.config.username);
-		//this.log.info('config password: ' + this.config.password);
 		const systemConfig = await this.getForeignObjectAsync("system.config");
-			if (!this.supportsFeature || !this.supportsFeature("ADAPTER_AUTO_DECRYPT_NATIVE")) {
+		/*	
+		if (!this.supportsFeature || !this.supportsFeature("ADAPTER_AUTO_DECRYPT_NATIVE")) {
+				this.log.info(this.config.password);
 				this.config.password = this.decrypt2(systemConfig?.native?.secret ?? "Zgfr56gFe87jJOM", this.config.password);
-				console.log(this.config.password);
-					
-					
-				
+				this.log.info('PW decrypt');
 			}
+			*/
+	
 		this.connect(this.config.username, this.config.password);
 		/*
 		For every state in the system there has to be also an object of type state
 		Here a simple template for a boolean variable named "testVariable"
 		Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
 		*/
-		await this.setObjectNotExistsAsync('testVariable', {
-			type: 'state',
-			common: {
-				name: 'testVariable',
-				type: 'boolean',
-				role: 'indicator',
-				read: true,
-				write: true,
-			},
-			native: {},
-		});
 		await this.setObjectNotExistsAsync('state.state', {
 			type: 'state',
 			common: {
@@ -323,6 +311,33 @@ class Boschindego extends utils.Adapter {
 			native: {},
 		});
 
+		await this.setObjectNotExistsAsync('map.mapSVG', {
+			type: 'state',
+			common: {
+				name: 'mapSVG',
+				type: 'number',
+				min: 0,
+				max: 100,
+				role: 'value',
+				read: true,
+				write: false,
+			},
+			native: {},
+		});
+		await this.setObjectNotExistsAsync('map.mapSVGwithIndego', {
+			type: 'state',
+			common: {
+				name: 'mapSVGwithIndego',
+				type: 'number',
+				min: 0,
+				max: 100,
+				role: 'value',
+				read: true,
+				write: false,
+			},
+			native: {},
+		});
+
 		await this.setObjectNotExistsAsync('machine.alm_sn', {
 			type: 'state',
 			common: {
@@ -459,9 +474,10 @@ class Boschindego extends utils.Adapter {
 
 		result = await this.checkGroupAsync('admin', 'admin');
 		this.log.info('check group user admin group admin: ' + result);
-
+		
 		setInterval(()=> {
 			if (connected && refreshMode == 1) {
+				// this.checkAuth(this.config.username, this.config.password);
 				console.log('tier 1');
 				this.state();
 			}
@@ -584,6 +600,23 @@ class Boschindego extends utils.Adapter {
 		});
 	}
 
+	private checkAuth(username: string,password: string) {
+		const buff = Buffer.from(username + ":" + password, 'utf-8');
+		const base64 = buff.toString('base64');
+		axios({
+			method: "GET",
+			url: `${URL}authenticate/check`,
+			headers: {
+				'Authorization': `Basic ${base64}`,
+				'x-im-context-id': `${contextId}`
+			}
+		}).then(async res => { 
+			console.log('checkAuth',res);
+		}).catch(err => {
+			console.log("error in check auth request", err);
+		});
+	}
+
 	private mow(){
 		console.log("mow");
 		axios({
@@ -631,16 +664,16 @@ class Boschindego extends utils.Adapter {
 			console.log("error in pause request", err);
 		});
 	};
-	  
-	 private state(){
+	
+	private state(){
 		console.log("state");
 		axios({
 			method: "GET",
-			url: `${URL}alms/${alm_sn}/state`, // ?longpoll=true&timeout=600&last=
+			url: `${URL}alms/${alm_sn}/state`,
 			headers: {
 				'x-im-context-id': `${contextId}`
 			}
-		}).then(async res => {
+		}).then(async res => { 
 			
 
 			await this.setStateAsync('state.state', { val: res.data.state, ack: true });
@@ -662,9 +695,19 @@ class Boschindego extends utils.Adapter {
 			for (let state of stateCodes) {
 				if (state[0] == res.data.state) {
 					await this.setStateAsync('state.stateText', { val: state[1], ack: true });
-				}
+					if (state[2] === 1 && firstRun === false) {
+						// bot is moving
+						await this.getMap();
+						this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
+					}
+				} 
 			}
 			this.stateCodeChange(res.data.state);
+			if (firstRun) {
+				firstRun = false;
+				await this.getMap();
+				this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
+			}
 		}).catch(err => {
 			console.log("error in state request", err.response);
 			if (err.response.status == 401) {
@@ -694,6 +737,38 @@ class Boschindego extends utils.Adapter {
 			console.log("error in machine request", err);
 		});
 	};
+
+	private async getMap(){
+		console.log("get map");
+		axios({
+			method: "GET",
+			url: `${URL}alms/${alm_sn}/map?cached=false&force=true`,
+			headers: {
+				'x-im-context-id': `${contextId}`
+			}
+		}).then(async res => {
+			await this.setStateAsync('map.mapSVG', { val: res.data, ack: true });
+		}).catch(err => {
+			console.log("error in machine request", err);
+		});
+		return;
+	};
+
+	private async createMapWithIndego(x: number, y:number) {
+
+		let temp2map = this.getStateAsync('map.mapSVG');
+		temp2map.then(async result => {
+			if (result?.val) {
+				let tempMap = result?.val.toString();
+				tempMap = tempMap.substr(0,tempMap.length-6);
+				tempMap = tempMap + `<circle cx="${x}" cy="${y}" r="20" stroke="black" stroke-width="3" fill="yellow" /></svg>`; 
+				let tempMapBlack = tempMap.replace('ry="0" fill="#FAFAFA"','ry="0" fill="#000"');
+				await this.setStateAsync('map.mapSVGwithIndego', { val: tempMapBlack, ack: true });
+			}
+			
+		})	
+		return;	
+	}
 
 	private stateCodeChange(state: number) {
 		console.log(state);
