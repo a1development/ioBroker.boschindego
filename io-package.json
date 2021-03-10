@@ -1,7 +1,7 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.0.2",
+		"version": "0.9.0",
 		"news": {
 			"0.0.1": {
 				"en": "initial release",
@@ -16,29 +16,29 @@
 				"zh-cn": "首次出版"
 			}
 		},
-		"title": "Bosch Indego",
+		"title": "boschindego",
 		"titleLang": {
-			"en": "Bosch Indego",
-			"de": "Bosch Indego",
-			"ru": "Bosch Indego",
-			"pt": "Bosch Indego",
-			"nl": "Bosch Indego",
-			"fr": "Bosch Indego",
-			"it": "Bosch Indego",
-			"es": "Bosch Indego",
-			"pl": "Bosch Indego",
-			"zh-cn": "博世英迪格"
+			"en": "boschindego",
+			"de": "boschindego",
+			"ru": "Boschindego",
+			"pt": "Boschindego",
+			"nl": "boschindego",
+			"fr": "Boschindego",
+			"it": "boschindego",
+			"es": "boschindego",
+			"pl": "boschindego",
+			"zh-cn": "Boschindego"
 		},
 		"desc": {
-			"en": "Connects to Bosch Indego Cloud, controls your Mower.",
+			"en": "Connects to Bosch Indego Cloud, controls your mower.",
 			"de": "Verbindet sich mit der Bosch Indego Cloud und steuert Ihren Mäher.",
 			"ru": "Подключается к Bosch Indego Cloud, управляет вашей косилкой.",
-			"pt": "Liga-se ao Bosch Indego Cloud, controla o seu corta-relvas.",
-			"nl": "Maakt verbinding met Bosch Indego Cloud, bedient uw maaier.",
+			"pt": "Conecta-se ao Bosch Indego Cloud, controla seu cortador.",
+			"nl": "Maakt verbinding met Bosch Indego Cloud, bestuurt uw maaier.",
 			"fr": "Se connecte à Bosch Indego Cloud, contrôle votre tondeuse.",
 			"it": "Si collega a Bosch Indego Cloud, controlla il tuo rasaerba.",
 			"es": "Se conecta a Bosch Indego Cloud, controla su cortacésped.",
-			"pl": "Łączy się z Bosch Indego Cloud, kontroluje kosiarkę.",
+			"pl": "Łączy się z chmurą Bosch Indego, steruje kosiarką.",
 			"zh-cn": "连接到Bosch Indego Cloud，控制割草机。"
 		},
 		"authors": [
@@ -65,10 +65,12 @@
 		"materialize": true,
 		"dependencies": [
 			{
-				"js-controller": ">=1.4.2"
+				"js-controller": ">=3.1.0"
 			}
 		]
 	},
+	"encryptedNative": ["password"],
+    "protectedNative": ["password"],
 	"native": {
 		"username": "",
 		"password": ""

@@ -1,8 +1,6 @@
-.git
-.idea
+.*
 node_modules/
 nbproject/
-.vs*/
 *.code-workspace
 Thumbs.db
 gulpfile.js
@@ -10,9 +8,6 @@ gulpfile.js
 # CI test files
 test/
 travis/
-.travis.yml
-appveyor.yml
-.travis.yaml
 appveyor.yaml
 
 # TypeScript sources and project configuration
@@ -20,12 +15,8 @@ src/
 tsconfig.json
 tsconfig.*.json
 
-# ESLint configuration
-.eslintrc.json
-.eslintrc.js
-
 # Sourcemaps
-maps/
+*.map
 
 # npm package files
 iobroker.*.tgz

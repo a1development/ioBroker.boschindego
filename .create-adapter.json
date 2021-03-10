@@ -1,0 +1,38 @@
+{
+	"cli": true,
+	"adapterName": "boschindego",
+	"title": "boschindego",
+	"description": "Connects to Bosch Indego Cloud, controls your mower.",
+	"keywords": [
+		"bosch",
+		"indego",
+		"mower"
+	],
+	"expert": "no",
+	"features": [
+		"adapter"
+	],
+	"adminFeatures": [],
+	"type": "garden",
+	"startMode": "daemon",
+	"connectionType": "cloud",
+	"dataSource": "poll",
+	"connectionIndicator": "no",
+	"language": "TypeScript",
+	"adminReact": "no",
+	"tools": [
+		"ESLint"
+	],
+	"indentation": "Tab",
+	"quotes": "single",
+	"es6class": "yes",
+	"authorName": "Markus Boltersdorf",
+	"authorGithub": "a1development",
+	"authorEmail": "mboltersdorf@a1development.net",
+	"gitRemoteProtocol": "HTTPS",
+	"gitCommit": "no",
+	"license": "MIT License",
+	"ci": "gh-actions",
+	"dependabot": "no",
+	"creatorVersion": "1.32.0"
+}

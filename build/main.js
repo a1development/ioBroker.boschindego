@@ -1,23 +1,36 @@
 "use strict";
 /*
- * Created with @iobroker/create-adapter v1.26.0
+ * Created with @iobroker/create-adapter v1.32.0
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // The adapter-core module gives you access to the core ioBroker functions
 // you need to create an adapter
-// node --inspect-brk node_modules/ioBroker.boschindego/build/main.js --force --logs
-// https://github.com/zazaz-de/iot-device-bosch-indego-controller/blob/master/PROTOCOL.md
-const utils = require("@iobroker/adapter-core");
-const axios_1 = require("axios");
+const utils = __importStar(require("@iobroker/adapter-core"));
+const axios_1 = __importDefault(require("axios"));
+// Load your modules here, e.g.:
+// import * as fs from "fs";
 const URL = "https://api.indego.iot.bosch-si.com/api/v1/";
 const TIMEOUT = 30000;
 let contextId;
@@ -62,400 +75,387 @@ let stateCodes = [
 ];
 class Boschindego extends utils.Adapter {
     constructor(options = {}) {
-        super(Object.assign(Object.assign({}, options), { name: 'boschindego' }));
+        super({
+            ...options,
+            name: 'boschindego',
+        });
         this.on('ready', this.onReady.bind(this));
         this.on('stateChange', this.onStateChange.bind(this));
         // this.on('objectChange', this.onObjectChange.bind(this));
         // this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
     }
-    decrypt2(key, value) {
-        let result = "";
-        for (let i = 0; i < value.length; ++i) {
-            result += String.fromCharCode(key[i % key.length].charCodeAt(0) ^ value.charCodeAt(i));
-        }
-        return result;
-    }
     /**
      * Is called when databases are connected and adapter received configuration.
      */
-    onReady() {
-        return __awaiter(this, void 0, void 0, function* () {
-            // Initialize your adapter here
-            // The adapters config (in the instance object everything under the attribute "native") is accessible via
-            const systemConfig = yield this.getForeignObjectAsync("system.config");
-            /*
-            if (!this.supportsFeature || !this.supportsFeature("ADAPTER_AUTO_DECRYPT_NATIVE")) {
-                    this.log.info(this.config.password);
-                    this.config.password = this.decrypt2(systemConfig?.native?.secret ?? "Zgfr56gFe87jJOM", this.config.password);
-                    this.log.info('PW decrypt');
-                }
-                */
-            this.connect(this.config.username, this.config.password);
-            /*
-            For every state in the system there has to be also an object of type state
-            Here a simple template for a boolean variable named "testVariable"
-            Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
-            */
-            yield this.setObjectNotExistsAsync('state.state', {
-                type: 'state',
-                common: {
-                    name: 'state',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.stateText', {
-                type: 'state',
-                common: {
-                    name: 'stateText',
-                    type: 'string',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.mowmode', {
-                type: 'state',
-                common: {
-                    name: 'mowmode',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.xPos', {
-                type: 'state',
-                common: {
-                    name: 'xPos',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.yPos', {
-                type: 'state',
-                common: {
-                    name: 'yPos',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.runtime.total.operate', {
-                type: 'state',
-                common: {
-                    name: 'operate',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.runtime.total.charge', {
-                type: 'state',
-                common: {
-                    name: 'charge',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.runtime.session.operate', {
-                type: 'state',
-                common: {
-                    name: 'operate',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.runtime.session.charge', {
-                type: 'state',
-                common: {
-                    name: 'charge',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.xPos', {
-                type: 'state',
-                common: {
-                    name: 'xPos',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.map_update_available', {
-                type: 'state',
-                common: {
-                    name: 'map_update_available',
-                    type: 'boolean',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.mapsvgcache_ts', {
-                type: 'state',
-                common: {
-                    name: 'mapsvgcache_ts',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.svg_xPos', {
-                type: 'state',
-                common: {
-                    name: 'svg_xPos',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.svg_yPos', {
-                type: 'state',
-                common: {
-                    name: 'svg_yPos',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.config_change', {
-                type: 'state',
-                common: {
-                    name: 'config_change',
-                    type: 'boolean',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.mow_trig', {
-                type: 'state',
-                common: {
-                    name: 'mow_trig',
-                    type: 'boolean',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('state.mowed', {
-                type: 'state',
-                common: {
-                    name: 'mowed',
-                    type: 'number',
-                    min: 0,
-                    max: 100,
-                    unit: '%',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('map.mapSVG', {
-                type: 'state',
-                common: {
-                    name: 'mapSVG',
-                    type: 'number',
-                    min: 0,
-                    max: 100,
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('map.mapSVGwithIndego', {
-                type: 'state',
-                common: {
-                    name: 'mapSVGwithIndego',
-                    type: 'number',
-                    min: 0,
-                    max: 100,
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('machine.alm_sn', {
-                type: 'state',
-                common: {
-                    name: 'alm_sn',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('machine.service_counter', {
-                type: 'state',
-                common: {
-                    name: 'service_counter',
-                    type: 'number',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('machine.needs_service', {
-                type: 'state',
-                common: {
-                    name: 'needs_service',
-                    type: 'boolean',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('machine.alm_mode', {
-                type: 'state',
-                common: {
-                    name: 'alm_mode',
-                    type: 'string',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('machine.bareToolnumber', {
-                type: 'state',
-                common: {
-                    name: 'bareToolnumber',
-                    type: 'string',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('machine.alm_firmware_version', {
-                type: 'state',
-                common: {
-                    name: 'alm_firmware_version',
-                    type: 'string',
-                    role: 'value',
-                    read: true,
-                    write: false,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('commands.mow', {
-                type: 'state',
-                common: {
-                    name: 'mow',
-                    type: 'boolean',
-                    role: 'button',
-                    read: false,
-                    write: true,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('commands.goHome', {
-                type: 'state',
-                common: {
-                    name: 'goHome',
-                    type: 'boolean',
-                    role: 'button',
-                    read: false,
-                    write: true,
-                },
-                native: {},
-            });
-            yield this.setObjectNotExistsAsync('commands.pause', {
-                type: 'state',
-                common: {
-                    name: 'pause',
-                    type: 'boolean',
-                    role: 'button',
-                    read: false,
-                    write: true,
-                },
-                native: {},
-            });
-            // In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
-            this.subscribeStates('commands.mow');
-            this.subscribeStates('commands.pause');
-            this.subscribeStates('commands.goHome');
-            // You can also add a subscription for multiple states. The following line watches all states starting with "lights."
-            // this.subscribeStates('lights.*');
-            // Or, if you really must, you can also watch all states. Don't do this if you don't need to. Otherwise this will cause a lot of unnecessary load on the system:
-            // this.subscribeStates('*');
-            /*
-                setState examples
-                you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-            */
-            // the variable testVariable is set to true as command (ack=false)
-            //await this.setStateAsync('testVariable', true);
-            // same thing, but the value is flagged "ack"
-            // ack should be always set to true if the value is received from or acknowledged from the target system
-            //await this.setStateAsync('testVariable', { val: true, ack: true });
-            // same thing, but the state is deleted after 30s (getState will return null afterwards)
-            //await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
-            // examples for the checkPassword/checkGroup functions
-            let result = yield this.checkPasswordAsync('admin', 'iobroker');
-            this.log.info('check user admin pw iobroker: ' + result);
-            result = yield this.checkGroupAsync('admin', 'admin');
-            this.log.info('check group user admin group admin: ' + result);
-            setInterval(() => {
-                if (connected && refreshMode == 1) {
-                    // this.checkAuth(this.config.username, this.config.password);
-                    console.log('tier 1');
-                    this.state();
-                }
-            }, 20000);
-            setInterval(() => {
-                if (connected && refreshMode == 2) {
-                    console.log('tier 2');
-                    this.state();
-                }
-            }, 60000);
-            setInterval(() => {
-                if (connected && refreshMode == 3) {
-                    console.log('tier 3');
-                    this.state();
-                }
-            }, 300000);
+    async onReady() {
+        // Initialize your adapter here
+        // The adapters config (in the instance object everything under the attribute "native") is accessible via
+        // this.config:
+        this.connect(this.config.username, this.config.password);
+        /*
+        For every state in the system there has to be also an object of type state
+        Here a simple template for a boolean variable named "testVariable"
+        Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
+        */
+        await this.setObjectNotExistsAsync('state.state', {
+            type: 'state',
+            common: {
+                name: 'state',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
         });
+        await this.setObjectNotExistsAsync('state.stateText', {
+            type: 'state',
+            common: {
+                name: 'stateText',
+                type: 'string',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.mowmode', {
+            type: 'state',
+            common: {
+                name: 'mowmode',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.xPos', {
+            type: 'state',
+            common: {
+                name: 'xPos',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.yPos', {
+            type: 'state',
+            common: {
+                name: 'yPos',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.runtime.total.operate', {
+            type: 'state',
+            common: {
+                name: 'operate',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.runtime.total.charge', {
+            type: 'state',
+            common: {
+                name: 'charge',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.runtime.session.operate', {
+            type: 'state',
+            common: {
+                name: 'operate',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.runtime.session.charge', {
+            type: 'state',
+            common: {
+                name: 'charge',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.xPos', {
+            type: 'state',
+            common: {
+                name: 'xPos',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.map_update_available', {
+            type: 'state',
+            common: {
+                name: 'map_update_available',
+                type: 'boolean',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.mapsvgcache_ts', {
+            type: 'state',
+            common: {
+                name: 'mapsvgcache_ts',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.svg_xPos', {
+            type: 'state',
+            common: {
+                name: 'svg_xPos',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.svg_yPos', {
+            type: 'state',
+            common: {
+                name: 'svg_yPos',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.config_change', {
+            type: 'state',
+            common: {
+                name: 'config_change',
+                type: 'boolean',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.mow_trig', {
+            type: 'state',
+            common: {
+                name: 'mow_trig',
+                type: 'boolean',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('state.mowed', {
+            type: 'state',
+            common: {
+                name: 'mowed',
+                type: 'number',
+                min: 0,
+                max: 100,
+                unit: '%',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('map.mapSVG', {
+            type: 'state',
+            common: {
+                name: 'mapSVG',
+                type: 'number',
+                min: 0,
+                max: 100,
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('map.mapSVGwithIndego', {
+            type: 'state',
+            common: {
+                name: 'mapSVGwithIndego',
+                type: 'number',
+                min: 0,
+                max: 100,
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('machine.alm_sn', {
+            type: 'state',
+            common: {
+                name: 'alm_sn',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('machine.service_counter', {
+            type: 'state',
+            common: {
+                name: 'service_counter',
+                type: 'number',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('machine.needs_service', {
+            type: 'state',
+            common: {
+                name: 'needs_service',
+                type: 'boolean',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('machine.alm_mode', {
+            type: 'state',
+            common: {
+                name: 'alm_mode',
+                type: 'string',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('machine.bareToolnumber', {
+            type: 'state',
+            common: {
+                name: 'bareToolnumber',
+                type: 'string',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('machine.alm_firmware_version', {
+            type: 'state',
+            common: {
+                name: 'alm_firmware_version',
+                type: 'string',
+                role: 'value',
+                read: true,
+                write: false,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('commands.mow', {
+            type: 'state',
+            common: {
+                name: 'mow',
+                type: 'boolean',
+                role: 'button',
+                read: false,
+                write: true,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('commands.goHome', {
+            type: 'state',
+            common: {
+                name: 'goHome',
+                type: 'boolean',
+                role: 'button',
+                read: false,
+                write: true,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('commands.pause', {
+            type: 'state',
+            common: {
+                name: 'pause',
+                type: 'boolean',
+                role: 'button',
+                read: false,
+                write: true,
+            },
+            native: {},
+        });
+        // In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
+        this.subscribeStates('commands.mow');
+        this.subscribeStates('commands.pause');
+        this.subscribeStates('commands.goHome');
+        // You can also add a subscription for multiple states. The following line watches all states starting with "lights."
+        // this.subscribeStates('lights.*');
+        // Or, if you really must, you can also watch all states. Don't do this if you don't need to. Otherwise this will cause a lot of unnecessary load on the system:
+        // this.subscribeStates('*');
+        /*
+            setState examples
+            you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
+        */
+        // the variable testVariable is set to true as command (ack=false)
+        //await this.setStateAsync('testVariable', true);
+        // same thing, but the value is flagged "ack"
+        // ack should be always set to true if the value is received from or acknowledged from the target system
+        //await this.setStateAsync('testVariable', { val: true, ack: true });
+        // same thing, but the state is deleted after 30s (getState will return null afterwards)
+        //await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
+        // examples for the checkPassword/checkGroup functions
+        let result = await this.checkPasswordAsync('admin', 'iobroker');
+        this.log.info('check user admin pw iobroker: ' + result);
+        result = await this.checkGroupAsync('admin', 'admin');
+        this.log.info('check group user admin group admin: ' + result);
+        setInterval(() => {
+            if (connected && refreshMode == 1) {
+                // this.checkAuth(this.config.username, this.config.password);
+                console.log('tier 1');
+                this.state();
+            }
+        }, 20000);
+        setInterval(() => {
+            if (connected && refreshMode == 2) {
+                console.log('tier 2');
+                this.state();
+            }
+        }, 60000);
+        setInterval(() => {
+            if (connected && refreshMode == 3) {
+                console.log('tier 3');
+                this.state();
+            }
+        }, 300000);
     }
     /**
      * Is called when adapter shuts down - callback has to be called under any circumstances!
@@ -512,7 +512,7 @@ class Boschindego extends utils.Adapter {
     // If you need to accept messages in your adapter, uncomment the following block and the corresponding line in the constructor.
     // /**
     //  * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...
-    //  * Using this method requires "common.message" property to be set to true in io-package.json
+    //  * Using this method requires "common.messagebox" property to be set to true in io-package.json
     //  */
     // private onMessage(obj: ioBroker.Message): void {
     // 	if (typeof obj === 'object' && obj.message) {
@@ -539,6 +539,7 @@ class Boschindego extends utils.Adapter {
             data: { device: '', os_type: 'Android', os_version: '4.0', dvc_manuf: 'unknown', dvc_type: 'unknown' }
         }).then(res => {
             this.log.info('connect ok');
+            console.log('connect', res.data);
             contextId = res.data.contextId;
             userId = res.data.userId;
             alm_sn = res.data.alm_sn;
@@ -560,9 +561,9 @@ class Boschindego extends utils.Adapter {
                 'Authorization': `Basic ${base64}`,
                 'x-im-context-id': `${contextId}`
             }
-        }).then((res) => __awaiter(this, void 0, void 0, function* () {
+        }).then(async (res) => {
             console.log('checkAuth', res);
-        })).catch(err => {
+        }).catch(err => {
             console.log("error in check auth request", err);
         });
     }
@@ -622,28 +623,30 @@ class Boschindego extends utils.Adapter {
             headers: {
                 'x-im-context-id': `${contextId}`
             }
-        }).then((res) => __awaiter(this, void 0, void 0, function* () {
-            yield this.setStateAsync('state.state', { val: res.data.state, ack: true });
-            yield this.setStateAsync('state.map_update_available', { val: res.data.map_update_available, ack: true });
-            yield this.setStateAsync('state.mowed', { val: res.data.mowed, ack: true });
-            yield this.setStateAsync('state.mowmode', { val: res.data.mowmode, ack: true });
-            yield this.setStateAsync('state.xPos', { val: res.data.xPos, ack: true });
-            yield this.setStateAsync('state.yPos', { val: res.data.yPos, ack: true });
-            yield this.setStateAsync('state.runtime.total.operate', { val: res.data.runtime.total.operate, ack: true });
-            yield this.setStateAsync('state.runtime.total.charge', { val: res.data.runtime.total.charge, ack: true });
-            yield this.setStateAsync('state.runtime.session.operate', { val: res.data.runtime.session.operate, ack: true });
-            yield this.setStateAsync('state.runtime.session.charge', { val: res.data.runtime.session.charge, ack: true });
-            yield this.setStateAsync('state.mapsvgcache_ts', { val: res.data.mapsvgcache_ts, ack: true });
-            yield this.setStateAsync('state.svg_xPos', { val: res.data.svg_xPos, ack: true });
-            yield this.setStateAsync('state.svg_yPos', { val: res.data.svg_yPos, ack: true });
-            yield this.setStateAsync('state.config_change', { val: res.data.config_change, ack: true });
-            yield this.setStateAsync('state.mow_trig', { val: res.data.mow_trig, ack: true });
+        }).then(async (res) => {
+            await this.setStateAsync('state.state', { val: res.data.state, ack: true });
+            await this.setStateAsync('state.map_update_available', { val: res.data.map_update_available, ack: true });
+            await this.setStateAsync('state.mowed', { val: res.data.mowed, ack: true });
+            await this.setStateAsync('state.mowmode', { val: res.data.mowmode, ack: true });
+            await this.setStateAsync('state.xPos', { val: res.data.xPos, ack: true });
+            await this.setStateAsync('state.yPos', { val: res.data.yPos, ack: true });
+            await this.setStateAsync('state.runtime.total.operate', { val: res.data.runtime.total.operate, ack: true });
+            await this.setStateAsync('state.runtime.total.charge', { val: res.data.runtime.total.charge, ack: true });
+            await this.setStateAsync('state.runtime.session.operate', { val: res.data.runtime.session.operate, ack: true });
+            await this.setStateAsync('state.runtime.session.charge', { val: res.data.runtime.session.charge, ack: true });
+            await this.setStateAsync('state.mapsvgcache_ts', { val: res.data.mapsvgcache_ts, ack: true });
+            await this.setStateAsync('state.svg_xPos', { val: res.data.svg_xPos, ack: true });
+            await this.setStateAsync('state.svg_yPos', { val: res.data.svg_yPos, ack: true });
+            await this.setStateAsync('state.config_change', { val: res.data.config_change, ack: true });
+            await this.setStateAsync('state.mow_trig', { val: res.data.mow_trig, ack: true });
+            console.log(res.data);
             for (let state of stateCodes) {
                 if (state[0] == res.data.state) {
-                    yield this.setStateAsync('state.stateText', { val: state[1], ack: true });
+                    await this.setStateAsync('state.stateText', { val: state[1], ack: true });
                     if (state[2] === 1 && firstRun === false) {
                         // bot is moving
-                        yield this.getMap();
+                        console.log('bot is moving, update map');
+                        await this.getMap();
                         this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
                     }
                 }
@@ -651,10 +654,10 @@ class Boschindego extends utils.Adapter {
             this.stateCodeChange(res.data.state);
             if (firstRun) {
                 firstRun = false;
-                yield this.getMap();
+                await this.getMap();
                 this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
             }
-        })).catch(err => {
+        }).catch(err => {
             console.log("error in state request", err.response);
             if (err.response.status == 401) {
                 connected = false;
@@ -671,55 +674,54 @@ class Boschindego extends utils.Adapter {
             headers: {
                 'x-im-context-id': `${contextId}`
             }
-        }).then((res) => __awaiter(this, void 0, void 0, function* () {
-            yield this.setStateAsync('machine.alm_sn', { val: res.data.alm_sn, ack: true });
-            yield this.setStateAsync('machine.alm_mode', { val: res.data.alm_mode, ack: true });
-            yield this.setStateAsync('machine.service_counter', { val: res.data.service_counter, ack: true });
-            yield this.setStateAsync('machine.needs_service', { val: res.data.needs_service, ack: true });
-            yield this.setStateAsync('machine.bareToolnumber', { val: res.data.bareToolnumber, ack: true });
-            yield this.setStateAsync('machine.alm_firmware_version', { val: res.data.alm_firmware_version, ack: true });
-        })).catch(err => {
+        }).then(async (res) => {
+            await this.setStateAsync('machine.alm_sn', { val: res.data.alm_sn, ack: true });
+            await this.setStateAsync('machine.alm_mode', { val: res.data.alm_mode, ack: true });
+            await this.setStateAsync('machine.service_counter', { val: res.data.service_counter, ack: true });
+            await this.setStateAsync('machine.needs_service', { val: res.data.needs_service, ack: true });
+            await this.setStateAsync('machine.bareToolnumber', { val: res.data.bareToolnumber, ack: true });
+            await this.setStateAsync('machine.alm_firmware_version', { val: res.data.alm_firmware_version, ack: true });
+        }).catch(err => {
             console.log("error in machine request", err);
         });
     }
     ;
-    getMap() {
-        return __awaiter(this, void 0, void 0, function* () {
-            console.log("get map");
-            axios_1.default({
-                method: "GET",
-                url: `${URL}alms/${alm_sn}/map?cached=false&force=true`,
-                headers: {
-                    'x-im-context-id': `${contextId}`
-                }
-            }).then((res) => __awaiter(this, void 0, void 0, function* () {
-                yield this.setStateAsync('map.mapSVG', { val: res.data, ack: true });
-            })).catch(err => {
-                console.log("error in machine request", err);
-            });
-            return;
+    async getMap() {
+        console.log("get map");
+        axios_1.default({
+            method: "GET",
+            url: `${URL}alms/${alm_sn}/map?cached=false&force=true`,
+            headers: {
+                'x-im-context-id': `${contextId}`
+            }
+        }).then(async (res) => {
+            await this.setStateAsync('map.mapSVG', { val: res.data, ack: true });
+        }).catch(err => {
+            console.log("error in map request", err);
         });
+        return;
     }
     ;
-    createMapWithIndego(x, y) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let temp2map = this.getStateAsync('map.mapSVG');
-            temp2map.then((result) => __awaiter(this, void 0, void 0, function* () {
-                if (result === null || result === void 0 ? void 0 : result.val) {
-                    let tempMap = result === null || result === void 0 ? void 0 : result.val.toString();
-                    tempMap = tempMap.substr(0, tempMap.length - 6);
-                    tempMap = tempMap + `<circle cx="${x}" cy="${y}" r="20" stroke="black" stroke-width="3" fill="yellow" /></svg>`;
-                    let tempMapBlack = tempMap.replace('ry="0" fill="#FAFAFA"', 'ry="0" fill="#000"');
-                    yield this.setStateAsync('map.mapSVGwithIndego', { val: tempMapBlack, ack: true });
-                }
-            }));
-            return;
+    async createMapWithIndego(x, y) {
+        let temp2map = this.getStateAsync('map.mapSVG');
+        temp2map.then(async (result) => {
+            if (result === null || result === void 0 ? void 0 : result.val) {
+                let tempMap = result === null || result === void 0 ? void 0 : result.val.toString();
+                tempMap = tempMap.substr(0, tempMap.length - 6);
+                tempMap = tempMap + `<circle cx="${x}" cy="${y}" r="20" stroke="black" stroke-width="3" fill="yellow" /></svg>`;
+                let tempMapBlack = tempMap.replace('ry="0" fill="#FAFAFA"', 'ry="0" fill="#000"');
+                await this.setStateAsync('map.mapSVGwithIndego', { val: tempMapBlack, ack: true });
+            }
         });
+        return;
     }
-    stateCodeChange(state) {
+    async stateCodeChange(state) {
         console.log(state);
         if (currentStateCode != state) {
             this.getMachine();
+            if (state == 260) {
+                firstRun = true; // get current location when returned to dock
+            }
         }
         if (state == 258) {
             refreshMode = 2;
@@ -735,7 +737,7 @@ class Boschindego extends utils.Adapter {
         currentStateCode = state;
     }
 }
-if (module.parent) {
+if (require.main !== module) {
     // Export the constructor in compact mode
     module.exports = (options) => new Boschindego(options);
 }

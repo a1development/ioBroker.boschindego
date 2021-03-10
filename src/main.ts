@@ -1,13 +1,13 @@
 /*
- * Created with @iobroker/create-adapter v1.26.0
+ * Created with @iobroker/create-adapter v1.32.0
  */
 
 // The adapter-core module gives you access to the core ioBroker functions
 // you need to create an adapter
-// node --inspect-brk node_modules/ioBroker.boschindego/build/main.js --force --logs
-// https://github.com/zazaz-de/iot-device-bosch-indego-controller/blob/master/PROTOCOL.md
 import * as utils from '@iobroker/adapter-core';
 import axios from 'axios';
+// Load your modules here, e.g.:
+// import * as fs from "fs";
 
 const URL ="https://api.indego.iot.bosch-si.com/api/v1/"; 
 const TIMEOUT = 30000;
@@ -57,24 +57,6 @@ let stateCodes = [
 ]
 
 
-// Load your modules here, e.g.:
-// import * as fs from "fs";
-
-// Augment the adapter.config object with the actual types
-// TODO: delete this in the next version
-declare global {
-	// eslint-disable-next-line @typescript-eslint/no-namespace
-	namespace ioBroker {
-		interface AdapterConfig {
-			// Define the shape of your options here (recommended)
-			username: string;
-			password: string;
-			// Or use a catch-all approach
-			[key: string]: any;
-		}
-	}
-}
-
 class Boschindego extends utils.Adapter {
 
 	public constructor(options: Partial<utils.AdapterOptions> = {}) {
@@ -84,37 +66,23 @@ class Boschindego extends utils.Adapter {
 		});
 		this.on('ready', this.onReady.bind(this));
 		this.on('stateChange', this.onStateChange.bind(this));
-		
-		
-		
 		// this.on('objectChange', this.onObjectChange.bind(this));
 		// this.on('message', this.onMessage.bind(this));
 		this.on('unload', this.onUnload.bind(this));
 	}
-	private decrypt2(key: string, value: string): string {
-		let result = "";
-		for (let i = 0; i < value.length; ++i) {
-			result += String.fromCharCode(key[i % key.length].charCodeAt(0) ^ value.charCodeAt(i));
-		}
-		return result;
-	}
+
 	/**
 	 * Is called when databases are connected and adapter received configuration.
 	 */
 	private async onReady(): Promise<void> {
 		// Initialize your adapter here
-		
+
 		// The adapters config (in the instance object everything under the attribute "native") is accessible via
-		const systemConfig = await this.getForeignObjectAsync("system.config");
-		/*	
-		if (!this.supportsFeature || !this.supportsFeature("ADAPTER_AUTO_DECRYPT_NATIVE")) {
-				this.log.info(this.config.password);
-				this.config.password = this.decrypt2(systemConfig?.native?.secret ?? "Zgfr56gFe87jJOM", this.config.password);
-				this.log.info('PW decrypt');
-			}
-			*/
-	
+		// this.config:
+		
+
 		this.connect(this.config.username, this.config.password);
+
 		/*
 		For every state in the system there has to be also an object of type state
 		Here a simple template for a boolean variable named "testVariable"
@@ -444,6 +412,8 @@ class Boschindego extends utils.Adapter {
 			native: {},
 		});
 
+
+
 		// In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
 		this.subscribeStates('commands.mow');
 		this.subscribeStates('commands.pause');
@@ -470,11 +440,10 @@ class Boschindego extends utils.Adapter {
 		// examples for the checkPassword/checkGroup functions
 		let result = await this.checkPasswordAsync('admin', 'iobroker');
 		this.log.info('check user admin pw iobroker: ' + result);
-		
 
 		result = await this.checkGroupAsync('admin', 'admin');
 		this.log.info('check group user admin group admin: ' + result);
-		
+
 		setInterval(()=> {
 			if (connected && refreshMode == 1) {
 				// this.checkAuth(this.config.username, this.config.password);
@@ -559,7 +528,7 @@ class Boschindego extends utils.Adapter {
 	// If you need to accept messages in your adapter, uncomment the following block and the corresponding line in the constructor.
 	// /**
 	//  * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...
-	//  * Using this method requires "common.message" property to be set to true in io-package.json
+	//  * Using this method requires "common.messagebox" property to be set to true in io-package.json
 	//  */
 	// private onMessage(obj: ioBroker.Message): void {
 	// 	if (typeof obj === 'object' && obj.message) {
@@ -588,6 +557,8 @@ class Boschindego extends utils.Adapter {
 			data: {device:'', os_type:'Android', os_version:'4.0', dvc_manuf:'unknown', dvc_type:'unknown'}
 		}).then(res => {
 			this.log.info('connect ok');
+			console.log('connect', res.data);
+			
 			contextId = res.data.contextId;
 			userId = res.data.userId;
 			alm_sn = res.data.alm_sn;
@@ -691,12 +662,15 @@ class Boschindego extends utils.Adapter {
 			await this.setStateAsync('state.svg_yPos', { val: res.data.svg_yPos, ack: true });
 			await this.setStateAsync('state.config_change', { val: res.data.config_change, ack: true });
 			await this.setStateAsync('state.mow_trig', { val: res.data.mow_trig, ack: true });
-
+			console.log(res.data);
+			 
 			for (let state of stateCodes) {
 				if (state[0] == res.data.state) {
 					await this.setStateAsync('state.stateText', { val: state[1], ack: true });
 					if (state[2] === 1 && firstRun === false) {
 						// bot is moving
+						console.log('bot is moving, update map');
+						
 						await this.getMap();
 						this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
 					}
@@ -749,7 +723,7 @@ class Boschindego extends utils.Adapter {
 		}).then(async res => {
 			await this.setStateAsync('map.mapSVG', { val: res.data, ack: true });
 		}).catch(err => {
-			console.log("error in machine request", err);
+			console.log("error in map request", err);
 		});
 		return;
 	};
@@ -770,11 +744,14 @@ class Boschindego extends utils.Adapter {
 		return;	
 	}
 
-	private stateCodeChange(state: number) {
+	private  async stateCodeChange(state: number) {
 		console.log(state);
 		
 		if (currentStateCode != state) {
 			this.getMachine();
+			if ( state == 260) {
+				firstRun = true; // get current location when returned to dock
+			}
 		}
 		if (state == 258) {
 			refreshMode = 2;
@@ -788,13 +765,10 @@ class Boschindego extends utils.Adapter {
 		}
 		currentStateCode = state;
 	}
-	  
-	  
-
 
 }
 
-if (module.parent) {
+if (require.main !== module) {
 	// Export the constructor in compact mode
 	module.exports = (options: Partial<utils.AdapterOptions> | undefined) => new Boschindego(options);
 } else {

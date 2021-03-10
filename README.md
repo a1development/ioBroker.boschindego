@@ -1,18 +1,19 @@
 ![Logo](admin/boschindego.png)
 # ioBroker.boschindego
 
-[![NPM version](http://img.shields.io/npm/v/iobroker.boschindego.svg)](https://www.npmjs.com/package/iobroker.boschindego)
+[![NPM version](https://img.shields.io/npm/v/iobroker.boschindego.svg)](https://www.npmjs.com/package/iobroker.boschindego)
 [![Downloads](https://img.shields.io/npm/dm/iobroker.boschindego.svg)](https://www.npmjs.com/package/iobroker.boschindego)
-![Number of Installations (latest)](http://iobroker.live/badges/boschindego-installed.svg)
-![Number of Installations (stable)](http://iobroker.live/badges/boschindego-stable.svg)
+![Number of Installations (latest)](https://iobroker.live/badges/boschindego-installed.svg)
+![Number of Installations (stable)](https://iobroker.live/badges/boschindego-stable.svg)
 [![Dependency Status](https://img.shields.io/david/a1development/iobroker.boschindego.svg)](https://david-dm.org/a1development/iobroker.boschindego)
-[![Known Vulnerabilities](https://snyk.io/test/github/a1development/ioBroker.boschindego/badge.svg)](https://snyk.io/test/github/a1development/ioBroker.boschindego)
 
 [![NPM](https://nodei.co/npm/iobroker.boschindego.png?downloads=true)](https://nodei.co/npm/iobroker.boschindego/)
 
+**Tests:** ![Test and Release](https://github.com/a1development/ioBroker.boschindego/workflows/Test%20and%20Release/badge.svg)
+
 ## boschindego adapter for ioBroker
 
-Connects to Bosch Indego Cloud, controls your Mower.
+Connects to Bosch Indego Cloud, controls your mower.
 
 ## Developer manual
 This section is intended for the developer. It can be deleted later
@@ -36,6 +37,7 @@ You are almost done, only a few steps left:
 	```bash
 	git push origin master
 	```
+
 1. Head over to [src/main.ts](src/main.ts) and start programming!
 
 ### Best Practices
@@ -44,15 +46,17 @@ check them out. If you're already experienced, you should also take a look at th
 
 ### Scripts in `package.json`
 Several npm scripts are predefined for your convenience. You can run them using `npm run <scriptname>`
-| Script name | Description                                              |
-|-------------|----------------------------------------------------------|
-| `build`    | Re-compile the TypeScript sources.                       |
-| `watch`     | Re-compile the TypeScript sources and watch for changes. |
-| `test:ts`   | Executes the tests you defined in `*.test.ts` files.     |
-| `test:package`    | Ensures your `package.json` and `io-package.json` are valid. |
-| `test:unit`       | Tests the adapter startup with unit tests (fast, but might require module mocks to work). |
-| `test:integration`| Tests the adapter startup with an actual instance of ioBroker. |
+| Script name | Description |
+|-------------|-------------|
+| `build:ts` | Compile the TypeScript sources. |
+| `watch:ts` | Compile the TypeScript sources and watch for changes. |
+| `watch` | Shortcut for `npm run watch:ts` |
+| `test:ts` | Executes the tests you defined in `*.test.ts` files. |
+| `test:package` | Ensures your `package.json` and `io-package.json` are valid. |
+| `test:unit` | Tests the adapter startup with unit tests (fast, but might require module mocks to work). |
+| `test:integration` | Tests the adapter startup with an actual instance of ioBroker. |
 | `test` | Performs a minimal test run on package files and your tests. |
+| `check` | Performs a type-check on your code (without compiling anything). |
 | `lint` | Runs `ESLint` to check your code for formatting errors and potential bugs. |
 
 ### Writing tests
@@ -67,6 +71,10 @@ The template provides you with basic tests for the adapter startup and package f
 It is recommended that you add your own tests into the mix.
 
 ### Publishing the adapter
+Since you have chosen GitHub Actions as your CI service, you can 
+enable automatic releases on npm whenever you push a new git tag that matches the form 
+`v<major>.<minor>.<patch>`. The necessary steps are described in `.github/workflows/test-and-release.yml`.
+
 To get your adapter released in ioBroker, please refer to the documentation 
 of [ioBroker.repositories](https://github.com/ioBroker/ioBroker.repositories#requirements-for-adapter-to-get-added-to-the-latest-repository).
 
@@ -95,7 +103,7 @@ For later updates, the above procedure is not necessary. Just do the following:
 ## License
 MIT License
 
-Copyright (c) 2020 Markus Boltersdorf <mboltersdorf@a1development.net>
+Copyright (c) 2021 Markus Boltersdorf <mboltersdorf@a1development.net>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
