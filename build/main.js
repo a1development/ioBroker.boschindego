@@ -1,7 +1,4 @@
 "use strict";
-/*
- * Created with @iobroker/create-adapter v1.32.0
- */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -25,13 +22,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// The adapter-core module gives you access to the core ioBroker functions
-// you need to create an adapter
+/*
+ * Created with @iobroker/create-adapter v1.32.0
+ */
 const utils = __importStar(require("@iobroker/adapter-core"));
 const axios_1 = __importDefault(require("axios"));
-// Load your modules here, e.g.:
-// import * as fs from "fs";
-const URL = "https://api.indego.iot.bosch-si.com/api/v1/";
+const URL = 'https://api.indego.iot.bosch-si.com/api/v1/';
 const TIMEOUT = 30000;
 let contextId;
 let userId;
@@ -40,6 +36,9 @@ let currentStateCode = 0;
 let refreshMode = 1;
 let connected = false;
 let firstRun = true;
+let interval1;
+let interval2;
+let interval3;
 let stateCodes = [
     [0, 'Reading status', 0],
     [257, 'Charging', 0],
@@ -81,8 +80,6 @@ class Boschindego extends utils.Adapter {
         });
         this.on('ready', this.onReady.bind(this));
         this.on('stateChange', this.onStateChange.bind(this));
-        // this.on('objectChange', this.onObjectChange.bind(this));
-        // this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
     }
     /**
@@ -90,14 +87,7 @@ class Boschindego extends utils.Adapter {
      */
     async onReady() {
         // Initialize your adapter here
-        // The adapters config (in the instance object everything under the attribute "native") is accessible via
-        // this.config:
         this.connect(this.config.username, this.config.password);
-        /*
-        For every state in the system there has to be also an object of type state
-        Here a simple template for a boolean variable named "testVariable"
-        Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
-        */
         await this.setObjectNotExistsAsync('state.state', {
             type: 'state',
             common: {
@@ -437,20 +427,20 @@ class Boschindego extends utils.Adapter {
         this.log.info('check user admin pw iobroker: ' + result);
         result = await this.checkGroupAsync('admin', 'admin');
         this.log.info('check group user admin group admin: ' + result);
-        setInterval(() => {
+        interval1 = setInterval(() => {
             if (connected && refreshMode == 1) {
                 // this.checkAuth(this.config.username, this.config.password);
                 console.log('tier 1');
                 this.state();
             }
         }, 20000);
-        setInterval(() => {
+        interval2 = setInterval(() => {
             if (connected && refreshMode == 2) {
                 console.log('tier 2');
                 this.state();
             }
         }, 60000);
-        setInterval(() => {
+        interval3 = setInterval(() => {
             if (connected && refreshMode == 3) {
                 console.log('tier 3');
                 this.state();
@@ -467,6 +457,9 @@ class Boschindego extends utils.Adapter {
             // clearTimeout(timeout2);
             // ...
             // clearInterval(interval1);
+            clearInterval(interval1);
+            clearInterval(interval2);
+            clearInterval(interval3);
             callback();
         }
         catch (e) {

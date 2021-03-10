@@ -1,15 +1,10 @@
 /*
  * Created with @iobroker/create-adapter v1.32.0
  */
-
-// The adapter-core module gives you access to the core ioBroker functions
-// you need to create an adapter
 import * as utils from '@iobroker/adapter-core';
 import axios from 'axios';
-// Load your modules here, e.g.:
-// import * as fs from "fs";
 
-const URL ="https://api.indego.iot.bosch-si.com/api/v1/"; 
+const URL = 'https://api.indego.iot.bosch-si.com/api/v1/'; 
 const TIMEOUT = 30000;
 
 let contextId: string;
@@ -20,6 +15,10 @@ let refreshMode = 1;
 
 let connected = false;
 let firstRun = true;
+
+let interval1: ReturnType<typeof setInterval>;
+let interval2: ReturnType<typeof setInterval>;
+let interval3: ReturnType<typeof setInterval>;
 
 let stateCodes = [ 
 	[0, 'Reading status',0],
@@ -53,9 +52,7 @@ let stateCodes = [
 	[1281, 'Software update',0],
 	[1537, 'Low power mode',0],
 	[64513, 'Docked - Waking up',0]
-	 
 ]
-
 
 class Boschindego extends utils.Adapter {
 
@@ -66,8 +63,6 @@ class Boschindego extends utils.Adapter {
 		});
 		this.on('ready', this.onReady.bind(this));
 		this.on('stateChange', this.onStateChange.bind(this));
-		// this.on('objectChange', this.onObjectChange.bind(this));
-		// this.on('message', this.onMessage.bind(this));
 		this.on('unload', this.onUnload.bind(this));
 	}
 
@@ -77,17 +72,8 @@ class Boschindego extends utils.Adapter {
 	private async onReady(): Promise<void> {
 		// Initialize your adapter here
 
-		// The adapters config (in the instance object everything under the attribute "native") is accessible via
-		// this.config:
-		
-
 		this.connect(this.config.username, this.config.password);
 
-		/*
-		For every state in the system there has to be also an object of type state
-		Here a simple template for a boolean variable named "testVariable"
-		Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
-		*/
 		await this.setObjectNotExistsAsync('state.state', {
 			type: 'state',
 			common: {
@@ -373,11 +359,6 @@ class Boschindego extends utils.Adapter {
 			native: {},
 		});
 
-
-
-
-
-
 		await this.setObjectNotExistsAsync('commands.mow', {
 			type: 'state',
 			common: {
@@ -418,6 +399,7 @@ class Boschindego extends utils.Adapter {
 		this.subscribeStates('commands.mow');
 		this.subscribeStates('commands.pause');
 		this.subscribeStates('commands.goHome');
+
 		// You can also add a subscription for multiple states. The following line watches all states starting with "lights."
 		// this.subscribeStates('lights.*');
 		// Or, if you really must, you can also watch all states. Don't do this if you don't need to. Otherwise this will cause a lot of unnecessary load on the system:
@@ -444,7 +426,7 @@ class Boschindego extends utils.Adapter {
 		result = await this.checkGroupAsync('admin', 'admin');
 		this.log.info('check group user admin group admin: ' + result);
 
-		setInterval(()=> {
+		interval1 = setInterval(()=> {
 			if (connected && refreshMode == 1) {
 				// this.checkAuth(this.config.username, this.config.password);
 				console.log('tier 1');
@@ -453,7 +435,7 @@ class Boschindego extends utils.Adapter {
 		}
 		,20000)
 
-		setInterval(()=> {
+		interval2 = setInterval(()=> {
 			if (connected && refreshMode == 2) {
 				console.log('tier 2');
 				this.state();
@@ -461,7 +443,7 @@ class Boschindego extends utils.Adapter {
 		}
 		,60000)
 
-		setInterval(()=> {
+		interval3 = setInterval(()=> {
 			if (connected && refreshMode == 3) {
 				console.log('tier 3');
 				this.state();
@@ -480,7 +462,9 @@ class Boschindego extends utils.Adapter {
 			// clearTimeout(timeout2);
 			// ...
 			// clearInterval(interval1);
-
+			clearInterval(interval1);
+			clearInterval(interval2);
+			clearInterval(interval3);
 			callback();
 		} catch (e) {
 			callback();
