@@ -12,6 +12,7 @@
 **Tests:** ![Test and Release](https://github.com/a1development/ioBroker.boschindego/workflows/Test%20and%20Release/badge.svg)
 
 ## boschindego adapter for ioBroker
+THIS IS A BETA RELEASE
 
 Connects to Bosch Indego Cloud, controls your mower.
 
