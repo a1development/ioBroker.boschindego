@@ -16,6 +16,8 @@ THIS IS A BETA RELEASE
 
 Connects to Bosch Indego Cloud, controls your mower.
 
+## Changelog 
+0.9.0 Initial Beta release
 
 
 ## License
