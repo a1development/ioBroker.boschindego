@@ -3,7 +3,7 @@
 *.code-workspace
 node_modules
 nbproject
-
+.vscode
 # Sourcemaps
 maps/
 

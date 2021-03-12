@@ -18,7 +18,8 @@
     "url": "https://github.com/a1development/ioBroker.boschindego"
   },
   "dependencies": {
-    "@iobroker/adapter-core": "^2.4.0"
+    "@iobroker/adapter-core": "^2.4.0",
+    "axios": "^0.21.1"
   },
   "devDependencies": {
     "@iobroker/testing": "^2.4.2",
