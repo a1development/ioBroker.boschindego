@@ -86,7 +86,9 @@ class Boschindego extends utils.Adapter {
      */
     async onReady() {
         // Initialize your adapter here
-        this.connect(this.config.username, this.config.password);
+        if (this.config.username) {
+            this.connect(this.config.username, this.config.password);
+        }
         await this.setObjectNotExistsAsync('state.state', {
             type: 'state',
             common: {
