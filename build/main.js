@@ -89,6 +89,10 @@ class Boschindego extends utils.Adapter {
         if (this.config.username) {
             this.connect(this.config.username, this.config.password);
         }
+        else {
+            this.setForeignState('system.adapter.' + this.namespace + '.alive', false);
+            this.log.error('Please provide your credentials');
+        }
         await this.setObjectNotExistsAsync('state.state', {
             type: 'state',
             common: {
@@ -533,6 +537,7 @@ class Boschindego extends utils.Adapter {
             // userId = res.data.userId;
             alm_sn = res.data.alm_sn;
             connected = true;
+            this.setForeignState('system.adapter.' + this.namespace + '.alive', true);
             this.state();
         }).catch(err => {
             this.log.error('connect error');
