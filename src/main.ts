@@ -4,13 +4,12 @@
 import * as utils from '@iobroker/adapter-core';
 import axios from 'axios';
 
-const URL = 'https://api.indego.iot.bosch-si.com/api/v1/'; 
-const TIMEOUT = 30000;
+const URL = 'https://api.indego.iot.bosch-si.com/api/v1/';
 
 let contextId: string;
-let userId: string;
+// let userId: string;
 let alm_sn: string;
-let currentStateCode = 0; 
+let currentStateCode = 0;
 let refreshMode = 1;
 
 let connected = false;
@@ -20,7 +19,7 @@ let interval1: ReturnType<typeof setInterval>;
 let interval2: ReturnType<typeof setInterval>;
 let interval3: ReturnType<typeof setInterval>;
 
-let stateCodes = [ 
+const stateCodes = [
 	[0, 'Reading status',0],
 	[257, 'Charging',0],
 	[258, 'Docked',0],
@@ -488,13 +487,13 @@ class Boschindego extends utils.Adapter {
 			// The state was changed
 			this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
 
-			if (id.search("mow")) {
+			if (id.search('mow')) {
 				this.mow();
 			}
-			if (id.search("pause")) {
+			if (id.search('pause')) {
 				this.pause();
 			}
-			if (id.search("goHome")) {
+			if (id.search('goHome')) {
 				this.goHome();
 			}
 		} else {
@@ -520,13 +519,13 @@ class Boschindego extends utils.Adapter {
 	// 	}
 	// }
 
-	private connect(username: string,password: string) {
+	private connect(username: string,password: string): void {
 		this.log.info('connect');
 		console.log('connect');
-		const buff = Buffer.from(username + ":" + password, 'utf-8');
+		const buff = Buffer.from(username + ':' + password, 'utf-8');
 		const base64 = buff.toString('base64');
 		axios({
-			method: "POST",
+			method: 'POST',
 			url: `${URL}authenticate`,
 			headers: {
 				'Authorization': `Basic ${base64}`,
@@ -536,97 +535,97 @@ class Boschindego extends utils.Adapter {
 		}).then(res => {
 			this.log.info('connect ok');
 			console.log('connect', res.data);
-			
+
 			contextId = res.data.contextId;
-			userId = res.data.userId;
+			// userId = res.data.userId;
 			alm_sn = res.data.alm_sn;
 			connected = true;
 			this.state();
 		}).catch(err => {
-			
+
 			this.log.error('connect error');
-			console.log("error in request", err);
+			console.log('error in request', err);
 			connected = false;
-			this.setForeignState("system.adapter." + this.namespace + ".alive", false);
+			this.setForeignState('system.adapter.' + this.namespace + '.alive', false);
 			this.terminate('Connection error. Credentials wrong?',0);
 		});
 	}
 
-	private checkAuth(username: string,password: string) {
-		const buff = Buffer.from(username + ":" + password, 'utf-8');
+	private checkAuth(username: string,password: string): void {
+		const buff = Buffer.from(username + ':' + password, 'utf-8');
 		const base64 = buff.toString('base64');
 		axios({
-			method: "GET",
+			method: 'GET',
 			url: `${URL}authenticate/check`,
 			headers: {
 				'Authorization': `Basic ${base64}`,
 				'x-im-context-id': `${contextId}`
 			}
-		}).then(async res => { 
+		}).then(async res => {
 			console.log('checkAuth',res);
 		}).catch(err => {
-			console.log("error in check auth request", err);
+			console.log('error in check auth request', err);
 		});
 	}
 
-	private mow(){
-		console.log("mow");
+	private mow(): void{
+		console.log('mow');
 		axios({
-			method: "PUT",
+			method: 'PUT',
 			url: `${URL}alms/${alm_sn}/state`,
 			headers: {
 				'x-im-context-id': `${contextId}`
 			},
 			data: { state: 'mow' }
 		}).then(res => {
-			console.log("mow res", res.data);
+			console.log('mow res', res.data);
 		}).catch(err => {
-			console.log("error in mow request", err);
+			console.log('error in mow request', err);
 		});
-	};
+	}
 
-	private goHome(){
-		console.log("returnToDock");
+	private goHome(): void{
+		console.log('returnToDock');
 		axios({
-			method: "PUT",
+			method: 'PUT',
 			url: `${URL}alms/${alm_sn}/state`,
 			headers: {
 				'x-im-context-id': `${contextId}`
 			},
 			data: { state: 'returnToDock' }
 		}).then(res => {
-			console.log("returnToDock res", res.data);
+			console.log('returnToDock res', res.data);
 		}).catch(err => {
-			console.log("error in returnToDock request", err);
+			console.log('error in returnToDock request', err);
 		});
-	};
+	}
 
-	private pause(){
-		console.log("pause");
+	private pause(): void{
+		console.log('pause');
 		axios({
-			method: "PUT",
+			method: 'PUT',
 			url: `${URL}alms/${alm_sn}/state`,
 			headers: {
 				'x-im-context-id': `${contextId}`
 			},
 			data: { state: 'pause' }
 		}).then(res => {
-			console.log("pause res", res.data);
+			console.log('pause res', res.data);
 		}).catch(err => {
-			console.log("error in pause request", err);
+			console.log('error in pause request', err);
 		});
-	};
-	
-	private state(){
-		console.log("state");
+	}
+
+	private state(): void{
+		console.log('state');
 		axios({
-			method: "GET",
+			method: 'GET',
 			url: `${URL}alms/${alm_sn}/state`,
 			headers: {
 				'x-im-context-id': `${contextId}`
 			}
-		}).then(async res => { 
-			
+		}).then(async res => {
+
 
 			await this.setStateAsync('state.state', { val: res.data.state, ack: true });
 			await this.setStateAsync('state.map_update_available', { val: res.data.map_update_available, ack: true });
@@ -644,18 +643,18 @@ class Boschindego extends utils.Adapter {
 			await this.setStateAsync('state.config_change', { val: res.data.config_change, ack: true });
 			await this.setStateAsync('state.mow_trig', { val: res.data.mow_trig, ack: true });
 			console.log(res.data);
-			 
-			for (let state of stateCodes) {
+
+			for (const state of stateCodes) {
 				if (state[0] == res.data.state) {
 					await this.setStateAsync('state.stateText', { val: state[1], ack: true });
 					if (state[2] === 1 && firstRun === false) {
 						// bot is moving
 						console.log('bot is moving, update map');
-						
+
 						await this.getMap();
 						this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
 					}
-				} 
+				}
 			}
 			this.stateCodeChange(res.data.state);
 			if (firstRun) {
@@ -664,24 +663,24 @@ class Boschindego extends utils.Adapter {
 				this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
 			}
 		}).catch(err => {
-			console.log("error in state request", err.response);
+			console.log('error in state request', err.response);
 			if (err.response.status == 401) {
 				connected = false;
 				this.connect(this.config.username, this.config.password);
 			}
-			
+
 		});
-  	};
-	private getMachine(){
-		console.log("machine");
+  	}
+	private getMachine(): void{
+		console.log('machine');
 		axios({
-			method: "GET",
+			method: 'GET',
 			url: `${URL}alms/${alm_sn}`,
 			headers: {
 				'x-im-context-id': `${contextId}`
 			}
 		}).then(async res => {
-			
+
 			await this.setStateAsync('machine.alm_sn', { val: res.data.alm_sn, ack: true });
 			await this.setStateAsync('machine.alm_mode', { val: res.data.alm_mode, ack: true });
 			await this.setStateAsync('machine.service_counter', { val: res.data.service_counter, ack: true });
@@ -689,14 +688,14 @@ class Boschindego extends utils.Adapter {
 			await this.setStateAsync('machine.bareToolnumber', { val: res.data.bareToolnumber, ack: true });
 			await this.setStateAsync('machine.alm_firmware_version', { val: res.data.alm_firmware_version, ack: true });
 		}).catch(err => {
-			console.log("error in machine request", err);
+			console.log('error in machine request', err);
 		});
-	};
+	}
 
-	private async getMap(){
-		console.log("get map");
+	private async getMap(): Promise<void>{
+		console.log('get map');
 		axios({
-			method: "GET",
+			method: 'GET',
 			url: `${URL}alms/${alm_sn}/map?cached=false&force=true`,
 			headers: {
 				'x-im-context-id': `${contextId}`
@@ -704,30 +703,30 @@ class Boschindego extends utils.Adapter {
 		}).then(async res => {
 			await this.setStateAsync('map.mapSVG', { val: res.data, ack: true });
 		}).catch(err => {
-			console.log("error in map request", err);
+			console.log('error in map request', err);
 		});
 		return;
-	};
+	}
 
-	private async createMapWithIndego(x: number, y:number) {
+	private async createMapWithIndego(x: number, y:number): Promise<void> {
 
-		let temp2map = this.getStateAsync('map.mapSVG');
+		const temp2map = this.getStateAsync('map.mapSVG');
 		temp2map.then(async result => {
 			if (result?.val) {
 				let tempMap = result?.val.toString();
 				tempMap = tempMap.substr(0,tempMap.length-6);
-				tempMap = tempMap + `<circle cx="${x}" cy="${y}" r="20" stroke="black" stroke-width="3" fill="yellow" /></svg>`; 
-				let tempMapBlack = tempMap.replace('ry="0" fill="#FAFAFA"','ry="0" fill="#000"');
+				tempMap = tempMap + `<circle cx="${x}" cy="${y}" r="20" stroke="black" stroke-width="3" fill="yellow" /></svg>`;
+				const tempMapBlack = tempMap.replace('ry="0" fill="#FAFAFA"','ry="0" fill="#000"');
 				await this.setStateAsync('map.mapSVGwithIndego', { val: tempMapBlack, ack: true });
 			}
-			
-		})	
-		return;	
+
+		})
+		return;
 	}
 
-	private  async stateCodeChange(state: number) {
+	private  async stateCodeChange(state: number):  Promise<void> {
 		console.log(state);
-		
+
 		if (currentStateCode != state) {
 			this.getMachine();
 			if ( state == 260) {
@@ -736,8 +735,8 @@ class Boschindego extends utils.Adapter {
 		}
 		if (state == 258) {
 			refreshMode = 2;
-			let d = new Date();
-			let n = d.getHours();
+			const d = new Date();
+			const n = d.getHours();
 			if (n >= 22 || n <=8) {
 				refreshMode = 3;
 			}
