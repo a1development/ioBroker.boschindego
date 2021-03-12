@@ -548,6 +548,8 @@ class Boschindego extends utils.Adapter {
 			console.log("error in request", err);
 			connected = false;
 			this.terminate('Connection error. Credentials wrong?');
+			//this.setForeignState("system.adapter." + this.namespace + ".alive", false);
+			process.exit(0);
 		});
 	}
 
