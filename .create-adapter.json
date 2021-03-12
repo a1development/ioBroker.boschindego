@@ -1,7 +1,7 @@
 {
 	"cli": true,
 	"adapterName": "boschindego",
-	"title": "boschindego",
+	"title": "Bosch Indego",
 	"description": "Connects to Bosch Indego Cloud, controls your mower.",
 	"keywords": [
 		"bosch",
