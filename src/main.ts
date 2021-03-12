@@ -543,9 +543,11 @@ class Boschindego extends utils.Adapter {
 			connected = true;
 			this.state();
 		}).catch(err => {
+			
 			this.log.error('connect error');
 			console.log("error in request", err);
 			connected = false;
+			this.terminate('Connection error. Credentials wrong?');
 		});
 	}
 
