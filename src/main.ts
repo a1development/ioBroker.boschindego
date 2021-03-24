@@ -649,9 +649,13 @@ class Boschindego extends utils.Adapter {
 			await this.setStateAsync('state.mow_trig', { val: res.data.mow_trig, ack: true });
 			console.log(res.data);
 
+			let stateText = `${res.data.state} - state unknown`;
+			let stateUnknow = true;
 			for (const state of stateCodes) {
 				if (state[0] == res.data.state) {
-					await this.setStateAsync('state.stateText', { val: state[1], ack: true });
+					stateText = String(state[1]);
+					stateUnknow = false;
+					// await this.setStateAsync('state.stateText', { val: state[1], ack: true });
 					if (state[2] === 1 && firstRun === false) {
 						// bot is moving
 						console.log('bot is moving, update map');
@@ -661,6 +665,10 @@ class Boschindego extends utils.Adapter {
 					}
 				}
 			}
+			if (stateUnknow) {
+				this.log.warn(stateText + '. Please check the state of the mower in your app and report both to the adapter developer');
+			}
+			await this.setStateAsync('state.stateText', { val: stateText, ack: true });
 			this.stateCodeChange(res.data.state);
 			if (firstRun) {
 				firstRun = false;
@@ -694,6 +702,21 @@ class Boschindego extends utils.Adapter {
 			await this.setStateAsync('machine.alm_firmware_version', { val: res.data.alm_firmware_version, ack: true });
 		}).catch(err => {
 			console.log('error in machine request', err);
+		});
+	}
+
+	private getAlerts(): void{
+		console.log('alerts');
+		axios({
+			method: 'GET',
+			url: `${URL}alerts`,
+			headers: {
+				'x-im-context-id': `${contextId}`
+			}
+		}).then(async res => {
+			console.log(res)
+		}).catch(err => {
+			console.log('error in alerts request', err);
 		});
 	}
 
