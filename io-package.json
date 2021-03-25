@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.1",
+		"version": "0.9.2",
 		"news": {
+			"0.9.2": {
+				"en": "mapSVGwithIndego now has a transparent background.'",
+				"de": "'mapSVGwithIndego hat jetzt einen transparenten Hintergrund."
+			},
 			"0.9.1": {
 				"en": "Added 'unknown state' message'",
 				"de": "'unknown state' Ausgabe hinzugefügt"
@@ -20,18 +24,18 @@
 				"zh-cn": "首次出版"
 			}
 		},
-		"title": "boschindego",
+		"title": "Bosch Indego",
 		"titleLang": {
-			"en": "boschindego",
-			"de": "boschindego",
-			"ru": "Boschindego",
-			"pt": "Boschindego",
-			"nl": "boschindego",
-			"fr": "Boschindego",
-			"it": "boschindego",
-			"es": "boschindego",
-			"pl": "boschindego",
-			"zh-cn": "Boschindego"
+			"en": "Bosch Indego",
+			"de": "Bosch Indego",
+			"ru": "Bosch Indego",
+			"pt": "Bosch Indego",
+			"nl": "Bosch Indego",
+			"fr": "Bosch Indego",
+			"it": "Bosch Indego",
+			"es": "Bosch Indego",
+			"pl": "Bosch Indego",
+			"zh-cn": "Bosch Indego"
 		},
 		"desc": {
 			"en": "Connects to Bosch Indego Cloud, controls your mower.",

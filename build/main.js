@@ -408,6 +408,14 @@ class Boschindego extends utils.Adapter {
             },
             native: {},
         });
+        // create channel
+        await this.extendObjectAsync('alerts', {
+            type: 'channel',
+            common: {
+                name: 'alerts',
+            },
+            native: {},
+        });
         // In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
         this.subscribeStates('commands.mow');
         this.subscribeStates('commands.pause');
@@ -694,7 +702,23 @@ class Boschindego extends utils.Adapter {
                 'x-im-context-id': `${contextId}`
             }
         }).then(async (res) => {
-            console.log(res);
+            const alertArray = res.data;
+            if (alertArray.length > 0) {
+                alertArray.forEach((alert) => {
+                    console.log(alert);
+                    this.extendObjectAsync('alerts.' + alert.alert_id, {
+                        type: 'state',
+                        common: {
+                            name: alert.error_code,
+                            read: true,
+                            write: false
+                        }
+                    });
+                    this.setState('alerts.' + alert.alert_id, { val: alert.message, ack: true });
+                });
+            }
+            // await this.setStateAsync('alerts', { val: res.data, ack: true });
+            // console.log(res)
         }).catch(err => {
             console.log('error in alerts request', err);
         });
@@ -721,7 +745,7 @@ class Boschindego extends utils.Adapter {
                 let tempMap = result === null || result === void 0 ? void 0 : result.val.toString();
                 tempMap = tempMap.substr(0, tempMap.length - 6);
                 tempMap = tempMap + `<circle cx="${x}" cy="${y}" r="20" stroke="black" stroke-width="3" fill="yellow" /></svg>`;
-                const tempMapBlack = tempMap.replace('ry="0" fill="#FAFAFA"', 'ry="0" fill="#000"');
+                const tempMapBlack = tempMap.replace('ry="0" fill="#FAFAFA"', 'ry="0" fill="#000" fill-opacity="0.0"');
                 await this.setStateAsync('map.mapSVGwithIndego', { val: tempMapBlack, ack: true });
             }
         });
@@ -731,6 +755,7 @@ class Boschindego extends utils.Adapter {
         console.log(state);
         if (currentStateCode != state) {
             this.getMachine();
+            this.getAlerts();
             if (state == 260) {
                 firstRun = true; // get current location when returned to dock
             }
