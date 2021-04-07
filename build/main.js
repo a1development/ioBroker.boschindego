@@ -409,6 +409,7 @@ class Boschindego extends utils.Adapter {
             native: {},
         });
         // create channel
+        /*
         await this.extendObjectAsync('alerts', {
             type: 'channel',
             common: {
@@ -416,6 +417,7 @@ class Boschindego extends utils.Adapter {
             },
             native: {},
         });
+        */
         // In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
         this.subscribeStates('commands.mow');
         this.subscribeStates('commands.pause');
@@ -495,13 +497,13 @@ class Boschindego extends utils.Adapter {
         if (state) {
             // The state was changed
             this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
-            if (id.search('mow')) {
+            if (id.indexOf('mow') >= 0) {
                 this.mow();
             }
-            if (id.search('pause')) {
+            if (id.indexOf('pause') >= 0) {
                 this.pause();
             }
-            if (id.search('goHome')) {
+            if (id.indexOf('goHome') >= 0) {
                 this.goHome();
             }
         }
@@ -572,7 +574,7 @@ class Boschindego extends utils.Adapter {
         });
     }
     mow() {
-        console.log('mow');
+        this.log.info('mow command sent');
         axios_1.default({
             method: 'PUT',
             url: `${URL}alms/${alm_sn}/state`,
@@ -588,6 +590,7 @@ class Boschindego extends utils.Adapter {
     }
     goHome() {
         console.log('returnToDock');
+        this.log.info('return to dock command sent');
         axios_1.default({
             method: 'PUT',
             url: `${URL}alms/${alm_sn}/state`,
@@ -603,6 +606,7 @@ class Boschindego extends utils.Adapter {
     }
     pause() {
         console.log('pause');
+        this.log.info('pause command sent');
         axios_1.default({
             method: 'PUT',
             url: `${URL}alms/${alm_sn}/state`,
@@ -703,20 +707,199 @@ class Boschindego extends utils.Adapter {
             }
         }).then(async (res) => {
             const alertArray = res.data;
+            const storedAlerts = [];
+            await this.getAdapterObjectsAsync().then(res => {
+                const objectKeys = Object.keys(res);
+                for (let i = 0; i < objectKeys.length; i++) {
+                    if (objectKeys[i].indexOf(this.namespace + '.alerts.') === 0 && objectKeys[i].endsWith('alert_id')) {
+                        this.log.error(JSON.stringify(objectKeys[i]));
+                        const startString = this.namespace + '.alerts.';
+                        const alertId = objectKeys[i].substring(objectKeys[i].lastIndexOf(startString) + startString.length, objectKeys[i].lastIndexOf('.alert_id'));
+                        storedAlerts.push(alertId);
+                    }
+                }
+            });
+            this.log.info('stored alerts 1: ' + JSON.stringify(storedAlerts));
             if (alertArray.length > 0) {
-                alertArray.forEach((alert) => {
-                    console.log(alert);
-                    this.extendObjectAsync('alerts.' + alert.alert_id, {
-                        type: 'state',
-                        common: {
-                            name: alert.error_code,
-                            read: true,
-                            write: false
+                this.log.info(alertArray.length);
+                await alertArray.forEach((alert) => {
+                    if (storedAlerts.indexOf(alert.alert_id) >= 0) {
+                        this.log.info('delete from array: ' + alert.alert_id);
+                        storedAlerts.splice(storedAlerts.indexOf(alert.alert_id), 1);
+                    }
+                    else {
+                        this.log.info('new Entry');
+                    }
+                    this.getObjectAsync('alerts.' + alert.alert_id).then(async (res) => {
+                        if (res === null) {
+                            this.setObjectNotExistsAsync;
+                            await this.createStateAsync(this.namespace, '.alerts', alert.alert_id, {
+                                role: 'state',
+                                type: 'object',
+                            });
+                            /*await this.setForeignObjectAsync(this.namespace + '.alerts.'+ alert.alert_id, {
+                                type: 'state',
+                                common: {
+                                    name: alert.alert_id,
+                                    role: 'state',
+                                    read: true,
+                                    write: false,
+                                },
+                                native: {
+                                }
+                            })
+                            */
+                            this.setStateAsync('alerts.' + alert.alert_id, { val: alert.error_code, ack: true });
+                            // this.createChannelAsync(this.namespace, 'alerts.'+ alert.alert_id);
+                            /*await this.setForeignObjectAsync(this.namespace +'.alerts.'+ alert.alert_id,
+                                {
+                                    _id: 'alerts.'+ alert.alert_id,
+                                    type: 'state',
+                                    common: {
+                                        name: alert.headline,
+                                        type: 'string',
+                                        read: true,
+                                        write: false,
+                                        role: 'state'
+                                    },
+                                    native: {}
+                                }
+
+                            )
+                            this.setStateAsync('alerts.'+ alert.alert_id  , { val: alert.error_code, ack: true } )
+                            */
+                            await this.setForeignObjectAsync(this.namespace + '.alerts.' + alert.alert_id + '.alert_id', {
+                                type: 'state',
+                                common: {
+                                    name: 'alert_id',
+                                    read: true,
+                                    write: false,
+                                    role: 'state'
+                                },
+                                native: {}
+                            });
+                            this.setStateAsync('alerts.' + alert.alert_id + '.alert_id', { val: alert.alert_id, ack: true });
+                            /*
+                            await this.setForeignObjectAsync('alerts.'+ alert.alert_id + '.message',
+                                {
+                                    type: 'state',
+                                    common: {
+                                        name: 'message',
+                                        read: true,
+                                        write: false,
+                                        role: 'state'
+                                    },
+                                    native: {}
+                                }
+
+                            )
+                            this.setStateAsync('alerts.'+ alert.alert_id + '.message' , { val: alert.message, ack: true } )
+
+                            await this.setForeignObjectAsync('alerts.'+ alert.alert_id + '.error_code',
+                                {
+                                    type: 'state',
+                                    common: {
+                                        name: 'error_code',
+                                        read: true,
+                                        write: false,
+                                        role: 'state'
+                                    },
+                                    native: {}
+                                }
+
+                            )
+                            this.setStateAsync('alerts.'+ alert.alert_id + '.error_code' , { val: alert.error_code, ack: true } )
+
+                            await this.setForeignObjectAsync('alerts.'+ alert.alert_id + '.date',
+                                {
+                                    type: 'state',
+                                    common: {
+                                        name: 'date',
+                                        read: true,
+                                        write: false,
+                                        role: 'state'
+                                    },
+                                    native: {}
+                                }
+
+                            )
+                            this.setStateAsync('alerts.'+ alert.alert_id + '.date' , { val: alert.date, ack: true } )
+
+                            await this.setForeignObjectAsync('alerts.'+ alert.alert_id + '.read_status',
+                                {
+                                    type: 'state',
+                                    common: {
+                                        name: 'read_status',
+                                        read: true,
+                                        write: false,
+                                        role: 'state'
+                                    },
+                                    native: {}
+                                }
+
+                            )
+                            this.setStateAsync('alerts.'+ alert.alert_id + '.read_status' , { val: alert.read_status, ack: true } )
+
+                            await this.setForeignObjectAsync('alerts.'+ alert.alert_id + '.flag',
+                                {
+                                    type: 'state',
+                                    common: {
+                                        name: 'flag',
+                                        read: true,
+                                        write: false,
+                                        role: 'state'
+                                    },
+                                    native: {}
+                                }
+
+                            )
+                            this.setStateAsync('alerts.'+ alert.alert_id + '.flag' , { val: alert.flag, ack: true } )
+
+                            await this.setForeignObjectAsync('alerts.'+ alert.alert_id + '.push',
+                                {
+                                    type: 'state',
+                                    common: {
+                                        name: 'push',
+                                        read: true,
+                                        write: false,
+                                        role: 'state'
+                                    },
+                                    native: {}
+                                }
+
+                            )
+                            this.setStateAsync('alerts.'+ alert.alert_id + '.push' , { val: alert.flag, ack: true } )
+                            */
+                        }
+                        else {
+                            this.setStateAsync('alerts.' + alert.alert_id + '.read_status', { val: alert.read_status, ack: true });
+                            this.setStateAsync('alerts.' + alert.alert_id + '.push', { val: alert.flag, ack: true });
                         }
                     });
-                    this.setState('alerts.' + alert.alert_id, { val: alert.message, ack: true });
+                    /*
+                    this.extendObjectAsync('alerts.'+ alert.alert_id,
+                        {
+                            type: 'state',
+                            common: {
+                                name: alert.error_code,
+                                read: true,
+                                write: false
+                            }
+                        }
+                    )
+                    this.setState('alerts.'+ alert.alert_id + '.message' , { val: alert.message, ack: true } )
+                    */
                 });
             }
+            this.log.info('stored alerts 2: ' + JSON.stringify(storedAlerts));
+            storedAlerts.forEach((alertId) => {
+                this.log.info('delete_' + this.namespace + '.alerts.' + alertId + '.alert_id' + '_');
+                this.deleteStateAsync('alerts.' + alertId + '.alert_id').then(res => {
+                    this.log.info('delete response: ' + JSON.stringify(res));
+                }).catch(err => {
+                    this.log.error(err);
+                });
+            });
             // await this.setStateAsync('alerts', { val: res.data, ack: true });
             // console.log(res)
         }).catch(err => {
@@ -755,7 +938,7 @@ class Boschindego extends utils.Adapter {
         console.log(state);
         if (currentStateCode != state) {
             this.getMachine();
-            this.getAlerts();
+            // this.getAlerts();
             if (state == 260) {
                 firstRun = true; // get current location when returned to dock
             }
