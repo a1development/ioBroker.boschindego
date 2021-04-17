@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.3",
+		"version": "0.9.4",
 		"news": {
+			"0.9.4": {
+				"en": "Reconnect after network problems. Connection Status indicator in info.connection object.",
+				"de": "Neuverbindung nach Netzwerkproblemen. Verbindungsstatus in info.connection Objekt."
+			},
 			"0.9.3": {
 				"en": "Bugfix for mow, pause, goHome commands.",
 				"de": "Bugfix für mow, pause, goHome commands."

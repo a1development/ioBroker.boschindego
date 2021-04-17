@@ -408,6 +408,18 @@ class Boschindego extends utils.Adapter {
             },
             native: {},
         });
+        await this.setObjectNotExistsAsync('info.connection', {
+            type: 'state',
+            'common': {
+                'role': 'indicator.connected',
+                'name': 'Communication with service working',
+                'type': 'boolean',
+                'read': true,
+                'write': false,
+                'def': false
+            },
+            native: {},
+        });
         // create channel
         /*
         await this.extendObjectAsync('alerts', {
@@ -442,6 +454,9 @@ class Boschindego extends utils.Adapter {
                 // this.checkAuth(this.config.username, this.config.password);
                 console.log('tier 1');
                 this.state();
+            }
+            if (connected == false) {
+                this.connect(this.config.username, this.config.password);
             }
         }, 20000);
         interval2 = setInterval(() => {
@@ -547,14 +562,18 @@ class Boschindego extends utils.Adapter {
             // userId = res.data.userId;
             alm_sn = res.data.alm_sn;
             connected = true;
+            this.setStateAsync('info.connection', true, true);
             this.setForeignState('system.adapter.' + this.namespace + '.alive', true);
             this.state();
         }).catch(err => {
+            // this.log.error(JSON.stringify(err));
             this.log.error('connect error');
             console.log('error in request', err);
+            this.log.error('connection error - credentials wrong or no network?');
             connected = false;
-            this.setForeignState('system.adapter.' + this.namespace + '.alive', false);
-            this.terminate('Connection error. Credentials wrong?', 0);
+            this.setStateAsync('info.connection', false, true);
+            // this.setForeignState('system.adapter.' + this.namespace + '.alive', false);
+            // this.terminate('Connection error. Credentials wrong?',0);
         });
     }
     checkAuth(username, password) {
@@ -671,9 +690,15 @@ class Boschindego extends utils.Adapter {
                 this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
             }
         }).catch(err => {
-            console.log('error in state request', err.response);
-            if (err.response.status == 401) {
+            this.log.error('connection error');
+            if (typeof err.response !== 'undefined' && err.response.status == 401) {
                 connected = false;
+                this.setStateAsync('info.connection', false, true);
+                this.connect(this.config.username, this.config.password);
+            }
+            else {
+                connected = false;
+                this.setStateAsync('info.connection', false, true);
                 this.connect(this.config.username, this.config.password);
             }
         });
