@@ -772,7 +772,7 @@ class Boschindego extends utils.Adapter {
 						// bot is moving
 						// console.log('bot is moving, update map');
 
-						// this.getMap();
+						await this.getMap();
 						// this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
 					}
 					this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
