@@ -757,6 +757,9 @@ class Boschindego extends utils.Adapter {
 			await this.setStateAsync('state.config_change', { val: res.data.config_change, ack: true });
 			await this.setStateAsync('state.mow_trig', { val: res.data.mow_trig, ack: true });
 			console.log(res.data);
+			if (res.data.map_update_available == true) {
+				await this.getMap();
+			}
 
 			let stateText = `${res.data.state} - state unknown`;
 			let stateUnknow = true;
@@ -767,11 +770,12 @@ class Boschindego extends utils.Adapter {
 					// await this.setStateAsync('state.stateText', { val: state[1], ack: true });
 					if (state[2] === 1 && firstRun === false) {
 						// bot is moving
-						console.log('bot is moving, update map');
+						// console.log('bot is moving, update map');
 
-						await this.getMap();
-						this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
+						// this.getMap();
+						// this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
 					}
+					this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
 				}
 			}
 			if (stateUnknow) {

@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.5",
+		"version": "0.9.6",
 		"news": {
+			"0.9.6": {
+				"en": "Optimized map updates",
+				"de": "Kartenaktualisierung verbessert."
+			},
 			"0.9.5": {
 				"en": "Added operationData, including often requested battery percentage.",
 				"de": "Datenpunkt operationData hinzugefügt. Oft angefrage battery percentage hinzugefügt."
