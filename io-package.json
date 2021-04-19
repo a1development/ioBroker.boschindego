@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.4",
+		"version": "0.9.5",
 		"news": {
+			"0.9.5": {
+				"en": "Added operationData, including often requested battery percentage.",
+				"de": "Datenpunkt operationData hinzugefügt. Oft angefrage battery percentage hinzugefügt."
+			},
 			"0.9.4": {
 				"en": "Reconnect after network problems. Connection Status indicator in info.connection object.",
 				"de": "Neuverbindung nach Netzwerkproblemen. Verbindungsstatus in info.connection Objekt."

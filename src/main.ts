@@ -374,6 +374,75 @@ class Boschindego extends utils.Adapter {
 			native: {},
 		});
 
+		await this.setObjectNotExistsAsync('operationData.battery.voltage', {
+			type: 'state',
+			common: {
+				name: 'voltage',
+				type: 'number',
+				role: 'value',
+				read: true,
+				write: false,
+			},
+			native: {},
+		});
+		await this.setObjectNotExistsAsync('operationData.battery.cycles', {
+			type: 'state',
+			common: {
+				name: 'cycles',
+				type: 'number',
+				role: 'value',
+				read: true,
+				write: false,
+			},
+			native: {},
+		});
+		await this.setObjectNotExistsAsync('operationData.battery.discharge', {
+			type: 'state',
+			common: {
+				name: 'discharge',
+				type: 'number',
+				role: 'value',
+				read: true,
+				write: false,
+			},
+			native: {},
+		});
+		await this.setObjectNotExistsAsync('operationData.battery.ambient_temp', {
+			type: 'state',
+			common: {
+				name: 'ambient_temp',
+				type: 'number',
+				role: 'value',
+				read: true,
+				write: false,
+			},
+			native: {},
+		});
+		await this.setObjectNotExistsAsync('operationData.battery.battery_temp', {
+			type: 'state',
+			common: {
+				name: 'battery_temp',
+				type: 'number',
+				role: 'value',
+				read: true,
+				write: false,
+			},
+			native: {},
+		});
+		await this.setObjectNotExistsAsync('operationData.battery.percent', {
+			type: 'state',
+			common: {
+				name: 'percent',
+				type: 'number',
+				role: 'value',
+				read: true,
+				write: false,
+			},
+			native: {},
+		});
+
+
+
 		await this.setObjectNotExistsAsync('commands.mow', {
 			type: 'state',
 			common: {
@@ -728,6 +797,7 @@ class Boschindego extends utils.Adapter {
 			}
 
 		});
+		this.getOperatingData();
   	}
 	private getMachine(): void{
 		console.log('machine');
@@ -747,6 +817,27 @@ class Boschindego extends utils.Adapter {
 			await this.setStateAsync('machine.alm_firmware_version', { val: res.data.alm_firmware_version, ack: true });
 		}).catch(err => {
 			console.log('error in machine request', err);
+		});
+	}
+	private getOperatingData(): void{
+		console.log('operating data');
+		axios({
+			method: 'GET',
+			url: `${URL}alms/${alm_sn}/operatingData`,
+			headers: {
+				'x-im-context-id': `${contextId}`
+			}
+		}).then(async res => {
+
+			await this.setStateAsync('operationData.battery.voltage', { val: res.data.battery.voltage, ack: true });
+			await this.setStateAsync('operationData.battery.cycles', { val: res.data.battery.cycles, ack: true });
+			await this.setStateAsync('operationData.battery.discharge', { val: res.data.battery.discharge, ack: true });
+			await this.setStateAsync('operationData.battery.ambient_temp', { val: res.data.battery.ambient_temp, ack: true });
+			await this.setStateAsync('operationData.battery.battery_temp', { val: res.data.battery.battery_temp, ack: true });
+			await this.setStateAsync('operationData.battery.percent', { val: res.data.battery.percent, ack: true });
+
+		}).catch(err => {
+			console.log('error in operatingData request', err);
 		});
 	}
 
