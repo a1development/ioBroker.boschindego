@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.6",
+		"version": "0.9.7",
 		"news": {
+			"0.9.7": {
+				"en": "Bugfix",
+				"de": "Bugfix"
+			},
 			"0.9.6": {
 				"en": "Optimized map updates",
 				"de": "Kartenaktualisierung verbessert."
