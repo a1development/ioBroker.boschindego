@@ -35,6 +35,7 @@ let currentStateCode = 0;
 let refreshMode = 1;
 let connected = false;
 let firstRun = true;
+let notMovingCount = 0;
 let interval1;
 let interval2;
 let interval3;
@@ -709,7 +710,7 @@ class Boschindego extends utils.Adapter {
         console.log('state');
         axios_1.default({
             method: 'GET',
-            url: `${URL}alms/${alm_sn}/state`,
+            url: `${URL}alms/${alm_sn}/state?cached=false&force=true`,
             headers: {
                 'x-im-context-id': `${contextId}`
             }
@@ -736,6 +737,18 @@ class Boschindego extends utils.Adapter {
                 if (state[0] == res.data.state) {
                     stateText = String(state[1]);
                     stateUnknow = false;
+                    if (state[2] == 1) {
+                        notMovingCount = 0;
+                    }
+                    else {
+                        if (notMovingCount == 0) {
+                            // update map, bot stopped
+                            this.log.info('bot stopped');
+                            await this.getMap();
+                            this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
+                        }
+                        notMovingCount = notMovingCount + 1;
+                    }
                     // await this.setStateAsync('state.stateText', { val: state[1], ack: true });
                     if (state[2] === 1 && firstRun === false) {
                         // bot is moving
