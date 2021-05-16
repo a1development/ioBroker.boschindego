@@ -48,6 +48,7 @@ const stateCodes = [
     [261, 'Docked', 0],
     [262, 'Docked - Loading map', 0],
     [263, 'Docked - Saving map', 0],
+    [266, 'Docked', 0],
     [512, 'Leaving dock', 1],
     [513, 'Mowing', 1],
     [514, 'Relocalising', 1],
@@ -516,10 +517,10 @@ class Boschindego extends utils.Adapter {
         //await this.setStateAsync('testVariable', { val: true, ack: true });
         // same thing, but the state is deleted after 30s (getState will return null afterwards)
         //await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
+        this.log.info(String(this.config.deepSleepAtNight));
         interval1 = setInterval(() => {
             if (connected && refreshMode == 1) {
                 // this.checkAuth(this.config.username, this.config.password);
-                console.log('tier 1');
                 this.state();
             }
             if (connected == false) {
@@ -528,16 +529,14 @@ class Boschindego extends utils.Adapter {
         }, 20000);
         interval2 = setInterval(() => {
             if (connected && refreshMode == 2) {
-                console.log('tier 2');
                 this.state();
             }
         }, 60000);
         interval3 = setInterval(() => {
-            if (connected && refreshMode == 3) {
-                console.log('tier 3');
+            if (connected && refreshMode == 3 && this.config.deepSleepAtNight == false) {
                 this.state();
             }
-        }, 300000);
+        }, 1800000);
     }
     /**
      * Is called when adapter shuts down - callback has to be called under any circumstances!
