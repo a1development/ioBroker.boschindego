@@ -517,7 +517,6 @@ class Boschindego extends utils.Adapter {
         //await this.setStateAsync('testVariable', { val: true, ack: true });
         // same thing, but the state is deleted after 30s (getState will return null afterwards)
         //await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
-        this.log.info(String(this.config.deepSleepAtNight));
         interval1 = setInterval(() => {
             if (connected && refreshMode == 1) {
                 // this.checkAuth(this.config.username, this.config.password);
