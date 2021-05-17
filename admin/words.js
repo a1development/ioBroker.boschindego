@@ -41,7 +41,7 @@ systemDictionary = {
 
 	"deepSleepAtNight": {
 		"en": "Don't wake up Bot during night time (22h - 8h) for status checks",
-		"de": "Wachen Sie Bot nicht während der Nachtzeit (22h - 8h) für Statusprüfungen auf",
+		"de": "Weckt den Bot nicht während der Nachtzeit (22h - 8h) für Statusprüfungen auf",
 		"ru": "Не будите бота в ночное время (22-8 часов) для проверки статуса",
 		"pt": "Não acorde o Bot durante a noite (22h - 8h) para verificações de status",
 		"nl": "Maak de Bot 's nachts (22.00 - 8.00 uur) niet wakker voor statuscontroles",

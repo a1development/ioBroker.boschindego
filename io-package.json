@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.9",
+		"version": "0.9.10",
 		"news": {
+			"0.9.10": {
+				"en": "Bugfix",
+				"de": "Bugfix"
+			},
 			"0.9.9": {
 				"en": "Bot deep sleep mode during night time added.",
 				"de": "Tiefschlaf Modus während der Nacht hinzugefügt."
