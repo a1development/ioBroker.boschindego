@@ -82,7 +82,7 @@ class Boschindego extends utils.Adapter {
 	 */
 	private async onReady(): Promise<void> {
 		// Initialize your adapter here
-		if (this.config.username) {
+		if (this.config.username && this.config.password) {
 			this.connect(this.config.username, this.config.password);
 		} else {
 			this.setForeignState('system.adapter.' + this.namespace + '.alive', false);
@@ -351,7 +351,7 @@ class Boschindego extends utils.Adapter {
 			},
 			native: {},
 		});
-		await this.setObjectNotExistsAsync('machine.bareToolnumber', {
+		await this.setObjectNotExistsAsync('machine.bare_tool_number', {
 			type: 'state',
 			common: {
 				name: 'bareToolnumber',
@@ -446,7 +446,8 @@ class Boschindego extends utils.Adapter {
 		await this.setObjectNotExistsAsync('commands.mow', {
 			type: 'state',
 			common: {
-				name: 'mow',
+				name: 'Mow',
+				desc: 'Start mowing',
 				type: 'boolean',
 				role: 'button',
 				read: false,
@@ -454,10 +455,11 @@ class Boschindego extends utils.Adapter {
 			},
 			native: {},
 		});
-		await this.setObjectNotExistsAsync('commands.goHome', {
+		await this.setObjectNotExistsAsync('commands.go_home', {
 			type: 'state',
 			common: {
-				name: 'goHome',
+				name: 'Go home',
+				desc: 'Return to docking station',
 				type: 'boolean',
 				role: 'button',
 				read: false,
@@ -468,7 +470,8 @@ class Boschindego extends utils.Adapter {
 		await this.setObjectNotExistsAsync('commands.pause', {
 			type: 'state',
 			common: {
-				name: 'pause',
+				name: 'Pause',
+				desc: 'Pause mowing',
 				type: 'boolean',
 				role: 'button',
 				read: false,
@@ -488,47 +491,18 @@ class Boschindego extends utils.Adapter {
 			},
 			native: {},
 		});
-		// create channel
-		/*
-		await this.extendObjectAsync('alerts', {
-			type: 'channel',
-			common: {
-				name: 'alerts',
-			},
-			native: {},
-		});
-		*/
 
 		// In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
 		this.subscribeStates('commands.mow');
 		this.subscribeStates('commands.pause');
-		this.subscribeStates('commands.goHome');
-
-		// You can also add a subscription for multiple states. The following line watches all states starting with "lights."
-		// this.subscribeStates('lights.*');
-		// Or, if you really must, you can also watch all states. Don't do this if you don't need to. Otherwise this will cause a lot of unnecessary load on the system:
-		// this.subscribeStates('*');
-
-		/*
-			setState examples
-			you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-		*/
-		// the variable testVariable is set to true as command (ack=false)
-		//await this.setStateAsync('testVariable', true);
-
-		// same thing, but the value is flagged "ack"
-		// ack should be always set to true if the value is received from or acknowledged from the target system
-		//await this.setStateAsync('testVariable', { val: true, ack: true });
-
-		// same thing, but the state is deleted after 30s (getState will return null afterwards)
-		//await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
+		this.subscribeStates('commands.go_home');
 
 
 		interval1 = setInterval(()=> {
 			if (connected && refreshMode == 1) {
 				// this.checkAuth(this.config.username, this.config.password);
 				console.log('tier 1');
-				this.state();
+				this.updateState();
 			}
 			if (connected == false) {
 				this.connect(this.config.username, this.config.password);
@@ -539,7 +513,7 @@ class Boschindego extends utils.Adapter {
 		interval2 = setInterval(()=> {
 			if (connected && refreshMode == 2) {
 				console.log('tier 2');
-				this.state();
+				this.updateState();
 			}
 		}
 		,60000)
@@ -547,7 +521,7 @@ class Boschindego extends utils.Adapter {
 		interval3 = setInterval(()=> {
 			if (connected && refreshMode == 3) {
 				console.log('tier 3');
-				this.state();
+				this.updateState();
 			}
 		}
 		,300000)
@@ -558,11 +532,6 @@ class Boschindego extends utils.Adapter {
 	 */
 	private onUnload(callback: () => void): void {
 		try {
-			// Here you must clear all timeouts or intervals that may still be active
-			// clearTimeout(timeout1);
-			// clearTimeout(timeout2);
-			// ...
-			// clearInterval(interval1);
 			clearInterval(interval1);
 			clearInterval(interval2);
 			clearInterval(interval3);
@@ -572,24 +541,6 @@ class Boschindego extends utils.Adapter {
 		}
 	}
 
-	// If you need to react to object changes, uncomment the following block and the corresponding line in the constructor.
-	// You also need to subscribe to the objects with `this.subscribeObjects`, similar to `this.subscribeStates`.
-	// /**
-	//  * Is called if a subscribed object changes
-	//  */
-	// private onObjectChange(id: string, obj: ioBroker.Object | null | undefined): void {
-	// 	if (obj) {
-	// 		// The object was changed
-	// 		this.log.info(`object ${id} changed: ${JSON.stringify(obj)}`);
-	// 	} else {
-	// 		// The object was deleted
-	// 		this.log.info(`object ${id} deleted`);
-	// 	}
-	// }
-
-	/**
-	 * Is called if a subscribed state changes
-	 */
 	private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
 		if (state) {
 			// The state was changed
@@ -601,7 +552,7 @@ class Boschindego extends utils.Adapter {
 			if (id.indexOf('pause') >= 0) {
 				this.pause();
 			}
-			if (id.indexOf('goHome') >= 0) {
+			if (id.indexOf('go_home') >= 0) {
 				this.goHome();
 			}
 		} else {
@@ -609,23 +560,6 @@ class Boschindego extends utils.Adapter {
 			this.log.info(`state ${id} deleted`);
 		}
 	}
-
-	// If you need to accept messages in your adapter, uncomment the following block and the corresponding line in the constructor.
-	// /**
-	//  * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...
-	//  * Using this method requires "common.messagebox" property to be set to true in io-package.json
-	//  */
-	// private onMessage(obj: ioBroker.Message): void {
-	// 	if (typeof obj === 'object' && obj.message) {
-	// 		if (obj.command === 'send') {
-	// 			// e.g. send email or pushover or whatever
-	// 			this.log.info('send command');
-
-	// 			// Send response in callback if required
-	// 			if (obj.callback) this.sendTo(obj.from, obj.command, 'Message received', obj.callback);
-	// 		}
-	// 	}
-	// }
 
 	private connect(username: string,password: string): void {
 		this.log.info('connect');
@@ -650,7 +584,7 @@ class Boschindego extends utils.Adapter {
 			connected = true;
 			this.setStateAsync('info.connection', true, true);
 			this.setForeignState('system.adapter.' + this.namespace + '.alive', true);
-			this.state();
+			this.updateState();
 		}).catch(err => {
 			// this.log.error(JSON.stringify(err));
 			this.log.error('connect error');
@@ -730,7 +664,7 @@ class Boschindego extends utils.Adapter {
 		});
 	}
 
-	private state(): void{
+	private updateState(): void{
 		console.log('state');
 		axios({
 			method: 'GET',
@@ -739,7 +673,7 @@ class Boschindego extends utils.Adapter {
 				'x-im-context-id': `${contextId}`
 			}
 		}).then(async res => {
-
+			this.log.debug('[State Data] ' + JSON.stringify(res.data));
 
 			await this.setStateAsync('state.state', { val: res.data.state, ack: true });
 			await this.setStateAsync('state.map_update_available', { val: res.data.map_update_available, ack: true });
@@ -819,12 +753,13 @@ class Boschindego extends utils.Adapter {
 				'x-im-context-id': `${contextId}`
 			}
 		}).then(async res => {
+			this.log.debug('[Machine Data] ' + JSON.stringify(res.data));
 
 			await this.setStateAsync('machine.alm_sn', { val: res.data.alm_sn, ack: true });
 			await this.setStateAsync('machine.alm_mode', { val: res.data.alm_mode, ack: true });
 			await this.setStateAsync('machine.service_counter', { val: res.data.service_counter, ack: true });
 			await this.setStateAsync('machine.needs_service', { val: res.data.needs_service, ack: true });
-			await this.setStateAsync('machine.bareToolnumber', { val: res.data.bareToolnumber, ack: true });
+			await this.setStateAsync('machine.bare_tool_number', { val: res.data.bareToolnumber, ack: true });
 			await this.setStateAsync('machine.alm_firmware_version', { val: res.data.alm_firmware_version, ack: true });
 		}).catch(err => {
 			console.log('error in machine request', err);
@@ -839,6 +774,7 @@ class Boschindego extends utils.Adapter {
 				'x-im-context-id': `${contextId}`
 			}
 		}).then(async res => {
+			this.log.debug('[Operating Data] ' + JSON.stringify(res.data));
 
 			await this.setStateAsync('operationData.battery.voltage', { val: res.data.battery.voltage, ack: true });
 			await this.setStateAsync('operationData.battery.cycles', { val: res.data.battery.cycles, ack: true });
@@ -861,6 +797,8 @@ class Boschindego extends utils.Adapter {
 				'x-im-context-id': `${contextId}`
 			}
 		}).then(async res => {
+			this.log.debug('[Alert Data] ' + JSON.stringify(res.data));
+
 			const alertArray = res.data;
 			const storedAlerts: string[] = [];
 			await this.getAdapterObjectsAsync().then(res => {

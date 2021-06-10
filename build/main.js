@@ -354,7 +354,7 @@ class Boschindego extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync('machine.bareToolnumber', {
+        await this.setObjectNotExistsAsync('machine.bare_tool_number', {
             type: 'state',
             common: {
                 name: 'bareToolnumber',
@@ -558,20 +558,6 @@ class Boschindego extends utils.Adapter {
             callback();
         }
     }
-    // If you need to react to object changes, uncomment the following block and the corresponding line in the constructor.
-    // You also need to subscribe to the objects with `this.subscribeObjects`, similar to `this.subscribeStates`.
-    // /**
-    //  * Is called if a subscribed object changes
-    //  */
-    // private onObjectChange(id: string, obj: ioBroker.Object | null | undefined): void {
-    // 	if (obj) {
-    // 		// The object was changed
-    // 		this.log.info(`object ${id} changed: ${JSON.stringify(obj)}`);
-    // 	} else {
-    // 		// The object was deleted
-    // 		this.log.info(`object ${id} deleted`);
-    // 	}
-    // }
     /**
      * Is called if a subscribed state changes
      */
@@ -715,6 +701,7 @@ class Boschindego extends utils.Adapter {
                 'x-im-context-id': `${contextId}`
             }
         }).then(async (res) => {
+            this.log.debug('[State Data] ' + JSON.stringify(res.data));
             await this.setStateAsync('state.state', { val: res.data.state, ack: true });
             await this.setStateAsync('state.map_update_available', { val: res.data.map_update_available, ack: true });
             await this.setStateAsync('state.mowed', { val: res.data.mowed, ack: true });
@@ -792,11 +779,12 @@ class Boschindego extends utils.Adapter {
                 'x-im-context-id': `${contextId}`
             }
         }).then(async (res) => {
+            this.log.debug('[Machine Data] ' + JSON.stringify(res.data));
             await this.setStateAsync('machine.alm_sn', { val: res.data.alm_sn, ack: true });
             await this.setStateAsync('machine.alm_mode', { val: res.data.alm_mode, ack: true });
             await this.setStateAsync('machine.service_counter', { val: res.data.service_counter, ack: true });
             await this.setStateAsync('machine.needs_service', { val: res.data.needs_service, ack: true });
-            await this.setStateAsync('machine.bareToolnumber', { val: res.data.bareToolnumber, ack: true });
+            await this.setStateAsync('machine.bare_tool_number', { val: res.data.bareToolnumber, ack: true });
             await this.setStateAsync('machine.alm_firmware_version', { val: res.data.alm_firmware_version, ack: true });
         }).catch(err => {
             console.log('error in machine request', err);
@@ -811,6 +799,7 @@ class Boschindego extends utils.Adapter {
                 'x-im-context-id': `${contextId}`
             }
         }).then(async (res) => {
+            this.log.debug('[Operating Data] ' + JSON.stringify(res.data));
             await this.setStateAsync('operationData.battery.voltage', { val: res.data.battery.voltage, ack: true });
             await this.setStateAsync('operationData.battery.cycles', { val: res.data.battery.cycles, ack: true });
             await this.setStateAsync('operationData.battery.discharge', { val: res.data.battery.discharge, ack: true });
@@ -830,6 +819,7 @@ class Boschindego extends utils.Adapter {
                 'x-im-context-id': `${contextId}`
             }
         }).then(async (res) => {
+            this.log.debug('[Alert Data] ' + JSON.stringify(res.data));
             const alertArray = res.data;
             const storedAlerts = [];
             await this.getAdapterObjectsAsync().then(res => {
