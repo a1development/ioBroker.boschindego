@@ -23,6 +23,7 @@ let contextId: string;
 let alm_sn: string;
 let currentStateCode = 0;
 let refreshMode = 1;
+let refreshState = true;
 let botIsMoving = true;
 
 let connected = false;
@@ -84,6 +85,9 @@ class Boschindego extends utils.Adapter {
 	 */
 	private async onReady(): Promise<void> {
 		// Initialize your adapter here
+		let refreshConfig = await this.getStateAsync('config.refresh_state');
+		refreshState = refreshConfig ? !!refreshConfig.val : refreshState;
+
 		if (this.config.username && this.config.password) {
 			this.connect(this.config.username, this.config.password);
 		} else {
@@ -443,7 +447,19 @@ class Boschindego extends utils.Adapter {
 			native: {},
 		});
 
-
+		await this.setObjectNotExistsAsync('config.refresh_state', {
+			type: 'state',
+			common: {
+				name: 'Refresh state',
+				desc: 'If true, state is refreshed regularly',
+				type: 'boolean',
+				role: 'switch',
+				read: true,
+				write: true,
+				def: true
+			},
+			native: {},
+		});
 
 		await this.setObjectNotExistsAsync('commands.mow', {
 			type: 'state',
@@ -498,10 +514,11 @@ class Boschindego extends utils.Adapter {
 		this.subscribeStates('commands.mow');
 		this.subscribeStates('commands.pause');
 		this.subscribeStates('commands.go_home');
+		this.subscribeStates('config.refresh_state');
 
 
 		interval1 = setInterval(()=> {
-			if (connected && refreshMode == 1) {
+			if (connected && refreshMode == 1 && refreshState) {
 				// this.checkAuth(this.config.username, this.config.password);
 				this.updateState();
 			}
@@ -522,14 +539,14 @@ class Boschindego extends utils.Adapter {
 		,20000)
 
 		interval2 = setInterval(()=> {
-			if (connected && refreshMode == 2) {
+			if (connected && refreshMode == 2 && refreshState) {
 				this.updateState();
 			}
 		}
 		,60000)
 
 		interval3 = setInterval(()=> {
-			if (connected && refreshMode == 3) {
+			if (connected && refreshMode == 3 && refreshState) {
 				this.updateState();
 			}
 		}
@@ -563,6 +580,10 @@ class Boschindego extends utils.Adapter {
 			}
 			if (id.indexOf('go_home') >= 0) {
 				this.goHome();
+			}
+
+			if (id.indexOf('refresh_state') >= 0) {
+				refreshState = !!state.val;
 			}
 		} else {
 			// The state was deleted
@@ -674,7 +695,7 @@ class Boschindego extends utils.Adapter {
 	}
 
 	private updateState(): void{
-		console.log('state');
+		this.log.debug('update state');
 		axios({
 			method: 'GET',
 			url: `${URL}alms/${alm_sn}/state?cached=false&force=true`,
