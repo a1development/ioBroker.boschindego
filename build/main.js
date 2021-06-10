@@ -33,6 +33,7 @@ let contextId;
 let alm_sn;
 let currentStateCode = 0;
 let refreshMode = 1;
+let automaticStateRefresh = true;
 let botIsMoving = true;
 let connected = false;
 let firstRun = true;
@@ -89,7 +90,9 @@ class Boschindego extends utils.Adapter {
      */
     async onReady() {
         // Initialize your adapter here
-        if (this.config.username) {
+        let refreshConfig = await this.getStateAsync('config.automatic_state_refresh');
+        automaticStateRefresh = refreshConfig ? !!refreshConfig.val : automaticStateRefresh;
+        if (this.config.username && this.config.password) {
             this.connect(this.config.username, this.config.password);
         }
         else {
@@ -444,10 +447,24 @@ class Boschindego extends utils.Adapter {
             },
             native: {},
         });
+        await this.setObjectNotExistsAsync('config.automatic_state_refresh', {
+            type: 'state',
+            common: {
+                name: 'Automatic state refresh',
+                desc: 'If true, state is refreshed regularly',
+                type: 'boolean',
+                role: 'switch',
+                read: true,
+                write: true,
+                def: true
+            },
+            native: {},
+        });
         await this.setObjectNotExistsAsync('commands.mow', {
             type: 'state',
             common: {
-                name: 'mow',
+                name: 'Mow',
+                desc: 'Start mowing',
                 type: 'boolean',
                 role: 'button',
                 read: false,
@@ -455,10 +472,11 @@ class Boschindego extends utils.Adapter {
             },
             native: {},
         });
-        await this.setObjectNotExistsAsync('commands.goHome', {
+        await this.setObjectNotExistsAsync('commands.go_home', {
             type: 'state',
             common: {
-                name: 'goHome',
+                name: 'Go home',
+                desc: 'Return to docking station',
                 type: 'boolean',
                 role: 'button',
                 read: false,
@@ -469,7 +487,20 @@ class Boschindego extends utils.Adapter {
         await this.setObjectNotExistsAsync('commands.pause', {
             type: 'state',
             common: {
-                name: 'pause',
+                name: 'Pause',
+                desc: 'Pause mowing',
+                type: 'boolean',
+                role: 'button',
+                read: false,
+                write: true,
+            },
+            native: {},
+        });
+        await this.setObjectNotExistsAsync('commands.refresh_state', {
+            type: 'state',
+            common: {
+                name: 'Refresh state',
+                desc: 'Refresh state',
                 type: 'boolean',
                 role: 'button',
                 read: false,
@@ -489,39 +520,16 @@ class Boschindego extends utils.Adapter {
             },
             native: {},
         });
-        // create channel
-        /*
-        await this.extendObjectAsync('alerts', {
-            type: 'channel',
-            common: {
-                name: 'alerts',
-            },
-            native: {},
-        });
-        */
         // In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
         this.subscribeStates('commands.mow');
         this.subscribeStates('commands.pause');
-        this.subscribeStates('commands.goHome');
-        // You can also add a subscription for multiple states. The following line watches all states starting with "lights."
-        // this.subscribeStates('lights.*');
-        // Or, if you really must, you can also watch all states. Don't do this if you don't need to. Otherwise this will cause a lot of unnecessary load on the system:
-        // this.subscribeStates('*');
-        /*
-            setState examples
-            you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-        */
-        // the variable testVariable is set to true as command (ack=false)
-        //await this.setStateAsync('testVariable', true);
-        // same thing, but the value is flagged "ack"
-        // ack should be always set to true if the value is received from or acknowledged from the target system
-        //await this.setStateAsync('testVariable', { val: true, ack: true });
-        // same thing, but the state is deleted after 30s (getState will return null afterwards)
-        //await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
+        this.subscribeStates('commands.go_home');
+        this.subscribeStates('commands.refresh_state');
+        this.subscribeStates('config.automatic_state_refresh');
         interval1 = setInterval(() => {
-            if (connected && refreshMode == 1) {
+            if (connected && refreshMode == 1 && automaticStateRefresh) {
                 // this.checkAuth(this.config.username, this.config.password);
-                this.state();
+                this.refreshState();
             }
             if (connected == false) {
                 this.connect(this.config.username, this.config.password);
@@ -539,13 +547,13 @@ class Boschindego extends utils.Adapter {
             }
         }, 20000);
         interval2 = setInterval(() => {
-            if (connected && refreshMode == 2) {
-                this.state();
+            if (connected && refreshMode == 2 && automaticStateRefresh) {
+                this.refreshState();
             }
         }, 60000);
         interval3 = setInterval(() => {
-            if (connected && refreshMode == 3 && this.config.deepSleepAtNight == false) {
-                this.state();
+            if (connected && refreshMode == 3 && automaticStateRefresh) {
+                this.refreshState();
             }
         }, 1800000);
     }
@@ -554,11 +562,6 @@ class Boschindego extends utils.Adapter {
      */
     onUnload(callback) {
         try {
-            // Here you must clear all timeouts or intervals that may still be active
-            // clearTimeout(timeout1);
-            // clearTimeout(timeout2);
-            // ...
-            // clearInterval(interval1);
             clearInterval(interval1);
             clearInterval(interval2);
             clearInterval(interval3);
@@ -568,9 +571,6 @@ class Boschindego extends utils.Adapter {
             callback();
         }
     }
-    /**
-     * Is called if a subscribed state changes
-     */
     onStateChange(id, state) {
         if (state) {
             // The state was changed
@@ -581,8 +581,14 @@ class Boschindego extends utils.Adapter {
             if (id.indexOf('pause') >= 0) {
                 this.pause();
             }
-            if (id.indexOf('goHome') >= 0) {
+            if (id.indexOf('go_home') >= 0) {
                 this.goHome();
+            }
+            if (id.indexOf('refresh_state') >= 0) {
+                this.refreshState();
+            }
+            if (id.indexOf('automatic_state_refresh') >= 0) {
+                automaticStateRefresh = !!state.val;
             }
         }
         else {
@@ -590,21 +596,6 @@ class Boschindego extends utils.Adapter {
             this.log.info(`state ${id} deleted`);
         }
     }
-    // If you need to accept messages in your adapter, uncomment the following block and the corresponding line in the constructor.
-    // /**
-    //  * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...
-    //  * Using this method requires "common.messagebox" property to be set to true in io-package.json
-    //  */
-    // private onMessage(obj: ioBroker.Message): void {
-    // 	if (typeof obj === 'object' && obj.message) {
-    // 		if (obj.command === 'send') {
-    // 			// e.g. send email or pushover or whatever
-    // 			this.log.info('send command');
-    // 			// Send response in callback if required
-    // 			if (obj.callback) this.sendTo(obj.from, obj.command, 'Message received', obj.callback);
-    // 		}
-    // 	}
-    // }
     connect(username, password) {
         this.log.info('connect');
         console.log('connect');
@@ -627,7 +618,7 @@ class Boschindego extends utils.Adapter {
             connected = true;
             this.setStateAsync('info.connection', true, true);
             this.setForeignState('system.adapter.' + this.namespace + '.alive', true);
-            this.state();
+            this.refreshState();
         }).catch(err => {
             // this.log.error(JSON.stringify(err));
             this.log.error('connect error');
@@ -702,8 +693,8 @@ class Boschindego extends utils.Adapter {
             console.log('error in pause request', err);
         });
     }
-    state() {
-        console.log('state');
+    refreshState() {
+        this.log.debug('refresh state');
         axios_1.default({
             method: 'GET',
             url: `${URL}alms/${alm_sn}/state?cached=false&force=true`,
