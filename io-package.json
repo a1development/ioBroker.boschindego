@@ -1,8 +1,16 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.8",
+		"version": "0.9.10",
 		"news": {
+			"0.9.10": {
+				"en": "Bugfix",
+				"de": "Bugfix"
+			},
+			"0.9.9": {
+				"en": "Bot deep sleep mode during night time added.",
+				"de": "Tiefschlaf Modus während der Nacht hinzugefügt."
+			},
 			"0.9.8": {
 				"en": "Optimized map updates",
 				"de": "Kartenaktualisierung verbessert."
@@ -105,7 +113,8 @@
     "protectedNative": ["password"],
 	"native": {
 		"username": "",
-		"password": ""
+		"password": "",
+		"deepSleepAtNight": 1
 	},
 	"objects": [],
 	"instanceObjects": []

@@ -23,6 +23,7 @@ let contextId: string;
 let alm_sn: string;
 let currentStateCode = 0;
 let refreshMode = 1;
+let botIsMoving = true;
 
 let connected = false;
 let firstRun = true;
@@ -40,6 +41,7 @@ const stateCodes = [
 	[261, 'Docked',0],
 	[262, 'Docked - Loading map',0],
 	[263, 'Docked - Saving map',0],
+	[266, 'Docked',0],
 	[512, 'Leaving dock',1],
 	[513, 'Mowing',1],
 	[514, 'Relocalising',1],
@@ -501,18 +503,26 @@ class Boschindego extends utils.Adapter {
 		interval1 = setInterval(()=> {
 			if (connected && refreshMode == 1) {
 				// this.checkAuth(this.config.username, this.config.password);
-				console.log('tier 1');
 				this.updateState();
 			}
 			if (connected == false) {
 				this.connect(this.config.username, this.config.password);
+			}
+			if (botIsMoving == false) {
+				refreshMode = 2;
+				const d = new Date();
+				const n = d.getHours();
+				if (n >= 22 || n < 8) {
+					refreshMode = 3;
+				}
+			} else {
+				refreshMode = 1;
 			}
 		}
 		,20000)
 
 		interval2 = setInterval(()=> {
 			if (connected && refreshMode == 2) {
-				console.log('tier 2');
 				this.updateState();
 			}
 		}
@@ -520,11 +530,10 @@ class Boschindego extends utils.Adapter {
 
 		interval3 = setInterval(()=> {
 			if (connected && refreshMode == 3) {
-				console.log('tier 3');
 				this.updateState();
 			}
 		}
-		,300000)
+		,1800000)
 	}
 
 	/**
@@ -699,6 +708,7 @@ class Boschindego extends utils.Adapter {
 					stateText = String(state[1]);
 					stateUnknow = false;
 					if ( state[2] == 1) {
+						botIsMoving = true;
 						notMovingCount = 0;
 					} else {
 						if (notMovingCount == 0) {
@@ -708,6 +718,7 @@ class Boschindego extends utils.Adapter {
 							this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
 						}
 						notMovingCount = notMovingCount + 1;
+						botIsMoving = false;
 					}
 					// await this.setStateAsync('state.stateText', { val: state[1], ack: true });
 					if (state[2] === 1 && firstRun === false) {
@@ -1066,7 +1077,7 @@ class Boschindego extends utils.Adapter {
 			refreshMode = 2;
 			const d = new Date();
 			const n = d.getHours();
-			if (n >= 22 || n <=8) {
+			if (n >= 22 || n < 8) {
 				refreshMode = 3;
 			}
 		} else {
