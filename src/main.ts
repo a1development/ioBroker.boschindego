@@ -85,7 +85,7 @@ class Boschindego extends utils.Adapter {
 	 */
 	private async onReady(): Promise<void> {
 		// Initialize your adapter here
-		let refreshConfig = await this.getStateAsync('config.automatic_state_refresh');
+		const refreshConfig = await this.getStateAsync('config.automatic_state_refresh');
 		automaticStateRefresh = refreshConfig ? !!refreshConfig.val : automaticStateRefresh;
 
 		if (this.config.username && this.config.password) {
