@@ -93,7 +93,7 @@ class Boschindego extends utils.Adapter {
         let refreshConfig = await this.getStateAsync('config.automatic_state_refresh');
         automaticStateRefresh = refreshConfig ? !!refreshConfig.val : automaticStateRefresh;
         if (this.config.username && this.config.password) {
-            this.connect(this.config.username, this.config.password);
+            this.connect(this.config.username, this.config.password, true);
         }
         else {
             this.setForeignState('system.adapter.' + this.namespace + '.alive', false);
@@ -527,32 +527,44 @@ class Boschindego extends utils.Adapter {
         this.subscribeStates('commands.refresh_state');
         this.subscribeStates('config.automatic_state_refresh');
         interval1 = setInterval(() => {
-            if (connected && refreshMode == 1 && automaticStateRefresh) {
+            this.connect(this.config.username, this.config.password, false);
+            if (refreshMode == 1 && automaticStateRefresh) {
                 // this.checkAuth(this.config.username, this.config.password);
                 this.refreshState();
-            }
-            if (connected == false) {
-                this.connect(this.config.username, this.config.password);
             }
             if (botIsMoving == false) {
                 refreshMode = 2;
                 const d = new Date();
                 const n = d.getHours();
-                if (n >= 22 || n < 8) {
+                if (n >= 22 || n < 7) {
+                    if (refreshMode != 3) {
+                        this.log.info('Switch to refresh mode 3');
+                    }
                     refreshMode = 3;
+                }
+                else {
+                    if (refreshMode != 2) {
+                        this.log.info('Switch to refresh mode 2');
+                    }
+                    refreshMode = 2;
                 }
             }
             else {
+                if (refreshMode != 1) {
+                    this.log.info('Switch to refresh mode 1');
+                }
                 refreshMode = 1;
             }
         }, 20000);
         interval2 = setInterval(() => {
-            if (connected && refreshMode == 2 && automaticStateRefresh) {
+            this.connect(this.config.username, this.config.password, false);
+            if (refreshMode == 2 && automaticStateRefresh) {
                 this.refreshState();
             }
         }, 60000);
         interval3 = setInterval(() => {
-            if (connected && refreshMode == 3 && automaticStateRefresh) {
+            this.connect(this.config.username, this.config.password, false);
+            if (refreshMode == 3 && automaticStateRefresh) {
                 this.refreshState();
             }
         }, 1800000);
@@ -589,6 +601,9 @@ class Boschindego extends utils.Adapter {
             }
             if (id.indexOf('automatic_state_refresh') >= 0) {
                 automaticStateRefresh = !!state.val;
+                if (automaticStateRefresh) {
+                    refreshMode = 1;
+                }
             }
         }
         else {
@@ -596,39 +611,40 @@ class Boschindego extends utils.Adapter {
             this.log.info(`state ${id} deleted`);
         }
     }
-    connect(username, password) {
-        this.log.info('connect');
-        console.log('connect');
-        const buff = Buffer.from(username + ':' + password, 'utf-8');
-        const base64 = buff.toString('base64');
-        axios_1.default({
-            method: 'POST',
-            url: `${URL}authenticate`,
-            headers: {
-                'Authorization': `Basic ${base64}`,
-                'Content-Type': 'application/json'
-            },
-            data: { device: '', os_type: 'Android', os_version: '4.0', dvc_manuf: 'unknown', dvc_type: 'unknown' }
-        }).then(res => {
-            this.log.info('connect ok');
-            console.log('connect', res.data);
-            contextId = res.data.contextId;
-            // userId = res.data.userId;
-            alm_sn = res.data.alm_sn;
-            connected = true;
-            this.setStateAsync('info.connection', true, true);
-            this.setForeignState('system.adapter.' + this.namespace + '.alive', true);
-            this.refreshState();
-        }).catch(err => {
-            // this.log.error(JSON.stringify(err));
-            this.log.error('connect error');
-            console.log('error in request', err);
-            this.log.error('connection error - credentials wrong or no network?');
-            connected = false;
-            this.setStateAsync('info.connection', false, true);
-            // this.setForeignState('system.adapter.' + this.namespace + '.alive', false);
-            // this.terminate('Connection error. Credentials wrong?',0);
-        });
+    connect(username, password, force) {
+        if (connected == false || force == true) {
+            this.log.info('connect');
+            const buff = Buffer.from(username + ':' + password, 'utf-8');
+            const base64 = buff.toString('base64');
+            axios_1.default({
+                method: 'POST',
+                url: `${URL}authenticate`,
+                headers: {
+                    'Authorization': `Basic ${base64}`,
+                    'Content-Type': 'application/json'
+                },
+                data: { device: '', os_type: 'Android', os_version: '4.0', dvc_manuf: 'unknown', dvc_type: 'unknown' }
+            }).then(res => {
+                this.log.info('connect ok');
+                console.log('connect', res.data);
+                contextId = res.data.contextId;
+                // userId = res.data.userId;
+                alm_sn = res.data.alm_sn;
+                connected = true;
+                this.setStateAsync('info.connection', true, true);
+                this.setForeignState('system.adapter.' + this.namespace + '.alive', true);
+                this.refreshState();
+            }).catch(err => {
+                // this.log.error(JSON.stringify(err));
+                this.log.error('connect error');
+                console.log('error in request', err);
+                this.log.error('connection error - credentials wrong or no network?');
+                connected = false;
+                this.setStateAsync('info.connection', false, true);
+                // this.setForeignState('system.adapter.' + this.namespace + '.alive', false);
+                // this.terminate('Connection error. Credentials wrong?',0);
+            });
+        }
     }
     checkAuth(username, password) {
         const buff = Buffer.from(username + ':' + password, 'utf-8');
@@ -694,84 +710,86 @@ class Boschindego extends utils.Adapter {
         });
     }
     refreshState() {
-        this.log.debug('refresh state');
-        axios_1.default({
-            method: 'GET',
-            url: `${URL}alms/${alm_sn}/state?cached=false&force=true`,
-            headers: {
-                'x-im-context-id': `${contextId}`
-            }
-        }).then(async (res) => {
-            this.log.debug('[State Data] ' + JSON.stringify(res.data));
-            await this.setStateAsync('state.state', { val: res.data.state, ack: true });
-            await this.setStateAsync('state.map_update_available', { val: res.data.map_update_available, ack: true });
-            await this.setStateAsync('state.mowed', { val: res.data.mowed, ack: true });
-            await this.setStateAsync('state.mowmode', { val: res.data.mowmode, ack: true });
-            await this.setStateAsync('state.xPos', { val: res.data.xPos, ack: true });
-            await this.setStateAsync('state.yPos', { val: res.data.yPos, ack: true });
-            await this.setStateAsync('state.runtime.total.operate', { val: res.data.runtime.total.operate, ack: true });
-            await this.setStateAsync('state.runtime.total.charge', { val: res.data.runtime.total.charge, ack: true });
-            await this.setStateAsync('state.runtime.session.operate', { val: res.data.runtime.session.operate, ack: true });
-            await this.setStateAsync('state.runtime.session.charge', { val: res.data.runtime.session.charge, ack: true });
-            await this.setStateAsync('state.mapsvgcache_ts', { val: res.data.mapsvgcache_ts, ack: true });
-            await this.setStateAsync('state.svg_xPos', { val: res.data.svg_xPos, ack: true });
-            await this.setStateAsync('state.svg_yPos', { val: res.data.svg_yPos, ack: true });
-            await this.setStateAsync('state.config_change', { val: res.data.config_change, ack: true });
-            await this.setStateAsync('state.mow_trig', { val: res.data.mow_trig, ack: true });
-            console.log(res.data);
-            let stateText = `${res.data.state} - state unknown`;
-            let stateUnknow = true;
-            for (const state of stateCodes) {
-                if (state[0] == res.data.state) {
-                    stateText = String(state[1]);
-                    stateUnknow = false;
-                    if (state[2] == 1) {
-                        botIsMoving = true;
-                        notMovingCount = 0;
-                    }
-                    else {
-                        if (notMovingCount == 0) {
-                            // update map, bot stopped
-                            this.log.info('bot stopped');
+        if (connected) {
+            this.log.debug('refresh state');
+            axios_1.default({
+                method: 'GET',
+                url: `${URL}alms/${alm_sn}/state?cached=false&force=true`,
+                headers: {
+                    'x-im-context-id': `${contextId}`
+                }
+            }).then(async (res) => {
+                this.log.debug('[State Data] ' + JSON.stringify(res.data));
+                await this.setStateAsync('state.state', { val: res.data.state, ack: true });
+                await this.setStateAsync('state.map_update_available', { val: res.data.map_update_available, ack: true });
+                await this.setStateAsync('state.mowed', { val: res.data.mowed, ack: true });
+                await this.setStateAsync('state.mowmode', { val: res.data.mowmode, ack: true });
+                await this.setStateAsync('state.xPos', { val: res.data.xPos, ack: true });
+                await this.setStateAsync('state.yPos', { val: res.data.yPos, ack: true });
+                await this.setStateAsync('state.runtime.total.operate', { val: res.data.runtime.total.operate, ack: true });
+                await this.setStateAsync('state.runtime.total.charge', { val: res.data.runtime.total.charge, ack: true });
+                await this.setStateAsync('state.runtime.session.operate', { val: res.data.runtime.session.operate, ack: true });
+                await this.setStateAsync('state.runtime.session.charge', { val: res.data.runtime.session.charge, ack: true });
+                await this.setStateAsync('state.mapsvgcache_ts', { val: res.data.mapsvgcache_ts, ack: true });
+                await this.setStateAsync('state.svg_xPos', { val: res.data.svg_xPos, ack: true });
+                await this.setStateAsync('state.svg_yPos', { val: res.data.svg_yPos, ack: true });
+                await this.setStateAsync('state.config_change', { val: res.data.config_change, ack: true });
+                await this.setStateAsync('state.mow_trig', { val: res.data.mow_trig, ack: true });
+                console.log(res.data);
+                let stateText = `${res.data.state} - state unknown`;
+                let stateUnknow = true;
+                for (const state of stateCodes) {
+                    if (state[0] == res.data.state) {
+                        stateText = String(state[1]);
+                        stateUnknow = false;
+                        if (state[2] == 1) {
+                            botIsMoving = true;
+                            notMovingCount = 0;
+                        }
+                        else {
+                            if (notMovingCount == 0) {
+                                // update map, bot stopped
+                                this.log.info('bot stopped');
+                                await this.getMap();
+                                this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
+                            }
+                            notMovingCount = notMovingCount + 1;
+                            botIsMoving = false;
+                        }
+                        // await this.setStateAsync('state.stateText', { val: state[1], ack: true });
+                        if (state[2] === 1 && firstRun === false) {
+                            // bot is moving
+                            // console.log('bot is moving, update map');
                             await this.getMap();
                             this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
                         }
-                        notMovingCount = notMovingCount + 1;
-                        botIsMoving = false;
-                    }
-                    // await this.setStateAsync('state.stateText', { val: state[1], ack: true });
-                    if (state[2] === 1 && firstRun === false) {
-                        // bot is moving
-                        // console.log('bot is moving, update map');
-                        await this.getMap();
-                        this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
                     }
                 }
-            }
-            if (stateUnknow) {
-                this.log.warn(stateText + '. Please check the state of the mower in your app and report both to the adapter developer');
-            }
-            await this.setStateAsync('state.stateText', { val: stateText, ack: true });
-            this.stateCodeChange(res.data.state);
-            if (firstRun) {
-                firstRun = false;
-                await this.getMap();
-                this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
-            }
-        }).catch(err => {
-            this.log.error('connection error');
-            if (typeof err.response !== 'undefined' && err.response.status == 401) {
-                connected = false;
-                this.setStateAsync('info.connection', false, true);
-                this.connect(this.config.username, this.config.password);
-            }
-            else {
-                connected = false;
-                this.setStateAsync('info.connection', false, true);
-                this.connect(this.config.username, this.config.password);
-            }
-        });
-        this.getOperatingData();
+                if (stateUnknow) {
+                    this.log.warn(stateText + '. Please check the state of the mower in your app and report both to the adapter developer');
+                }
+                await this.setStateAsync('state.stateText', { val: stateText, ack: true });
+                this.stateCodeChange(res.data.state);
+                if (firstRun) {
+                    firstRun = false;
+                    await this.getMap();
+                    this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
+                }
+            }).catch(err => {
+                this.log.error('connection error');
+                if (typeof err.response !== 'undefined' && err.response.status == 401) {
+                    connected = false;
+                    this.setStateAsync('info.connection', false, true);
+                    this.connect(this.config.username, this.config.password, true);
+                }
+                else {
+                    connected = false;
+                    this.setStateAsync('info.connection', false, true);
+                    this.connect(this.config.username, this.config.password, true);
+                }
+            });
+            this.getOperatingData();
+        }
     }
     getMachine() {
         console.log('machine');
