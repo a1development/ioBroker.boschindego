@@ -90,7 +90,7 @@ class Boschindego extends utils.Adapter {
      */
     async onReady() {
         // Initialize your adapter here
-        let refreshConfig = await this.getStateAsync('config.automatic_state_refresh');
+        const refreshConfig = await this.getStateAsync('config.automatic_state_refresh');
         automaticStateRefresh = refreshConfig ? !!refreshConfig.val : automaticStateRefresh;
         if (this.config.username && this.config.password) {
             this.connect(this.config.username, this.config.password, true);
@@ -527,8 +527,8 @@ class Boschindego extends utils.Adapter {
         this.subscribeStates('commands.refresh_state');
         this.subscribeStates('config.automatic_state_refresh');
         interval1 = setInterval(() => {
-            this.connect(this.config.username, this.config.password, false);
             if (refreshMode == 1 && automaticStateRefresh) {
+                this.connect(this.config.username, this.config.password, false);
                 // this.checkAuth(this.config.username, this.config.password);
                 this.refreshState();
             }
@@ -557,14 +557,14 @@ class Boschindego extends utils.Adapter {
             }
         }, 20000);
         interval2 = setInterval(() => {
-            this.connect(this.config.username, this.config.password, false);
             if (refreshMode == 2 && automaticStateRefresh) {
+                this.connect(this.config.username, this.config.password, false);
                 this.refreshState();
             }
         }, 60000);
         interval3 = setInterval(() => {
-            this.connect(this.config.username, this.config.password, false);
             if (refreshMode == 3 && automaticStateRefresh) {
+                this.connect(this.config.username, this.config.password, false);
                 this.refreshState();
             }
         }, 1800000);
@@ -789,6 +789,9 @@ class Boschindego extends utils.Adapter {
                 }
             });
             this.getOperatingData();
+        }
+        else {
+            this.connect(this.config.username, this.config.password, true);
         }
     }
     getMachine() {

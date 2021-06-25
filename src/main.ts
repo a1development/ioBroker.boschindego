@@ -531,8 +531,8 @@ class Boschindego extends utils.Adapter {
 
 
 		interval1 = setInterval(()=> {
-			this.connect(this.config.username, this.config.password, false);
 			if (refreshMode == 1 && automaticStateRefresh) {
+				this.connect(this.config.username, this.config.password, false);
 				// this.checkAuth(this.config.username, this.config.password);
 				this.refreshState();
 			}
@@ -561,16 +561,16 @@ class Boschindego extends utils.Adapter {
 		,20000)
 
 		interval2 = setInterval(()=> {
-			this.connect(this.config.username, this.config.password, false);
 			if (refreshMode == 2 && automaticStateRefresh) {
+				this.connect(this.config.username, this.config.password, false);
 				this.refreshState();
 			}
 		}
 		,60000)
 
 		interval3 = setInterval(()=> {
-			this.connect(this.config.username, this.config.password, false);
 			if (refreshMode == 3 && automaticStateRefresh) {
+				this.connect(this.config.username, this.config.password, false);
 				this.refreshState();
 			}
 		}
@@ -807,6 +807,8 @@ class Boschindego extends utils.Adapter {
 
 			});
 			this.getOperatingData();
+		} else {
+			this.connect(this.config.username, this.config.password, true);
 		}
   	}
 	private getMachine(): void{
