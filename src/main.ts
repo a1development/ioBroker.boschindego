@@ -569,7 +569,7 @@ class Boschindego extends utils.Adapter {
 		,60000)
 
 		interval3 = setInterval(()=> {
-			if (refreshMode == 3 && automaticStateRefresh) {
+			if (refreshMode == 3 && this.config.deepSleepAtNight == false && automaticStateRefresh) {
 				this.connect(this.config.username, this.config.password, false);
 				this.refreshState();
 			}
