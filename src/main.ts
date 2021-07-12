@@ -2,7 +2,7 @@
  * Created with @iobroker/create-adapter v1.32.0
  */
 import * as utils from '@iobroker/adapter-core';
-import axios, { AxiosPromise } from 'axios';
+import axios from 'axios';
 
 interface AlertItem {
 	alm_sn: string,
