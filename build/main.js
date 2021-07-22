@@ -767,13 +767,13 @@ class Boschindego extends utils.Adapter {
                 }
                 refreshMode = 1;
             }
-        }, 20000);
+        }, 45000);
         interval2 = setInterval(() => {
             if (refreshMode == 2 && automaticStateRefresh) {
                 this.connect(this.config.username, this.config.password, false);
                 this.refreshState();
             }
-        }, 60000);
+        }, 90000);
         interval3 = setInterval(() => {
             if (refreshMode == 3 && this.config.deepSleepAtNight == false && automaticStateRefresh) {
                 this.connect(this.config.username, this.config.password, false);

@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.10",
+		"version": "0.9.11",
 		"news": {
+			"0.9.11": {
+				"en": "Added Alerts, state refresh ( credits: withstu )",
+				"de": "Benachrichtigungen und manuelles Status update ( credits: withstu )"
+			},
 			"0.9.10": {
 				"en": "Bugfix",
 				"de": "Bugfix"
