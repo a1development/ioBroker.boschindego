@@ -1,6 +1,6 @@
 {
   "name": "iobroker.boschindego",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "description": "Connects to Bosch Indego Cloud, controls your mower.",
   "author": {
     "name": "Markus Boltersdorf",
