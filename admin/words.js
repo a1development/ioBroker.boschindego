@@ -2,41 +2,41 @@
 'use strict';
 
 systemDictionary = {
-	'boschindego adapter settings': {
+	'Boschindego Adapter Settings': {
 		'en': 'Adapter settings for boschindego',
 		'de': 'Adaptereinstellungen für boschindego',
 		'ru': 'Настройки адаптера для boschindego',
 		'pt': 'Configurações do adaptador para boschindego',
 		'nl': 'Adapterinstellingen voor boschindego',
-		'fr': "Paramètres d'adaptateur pour boschindego",
-		'it': "Impostazioni dell'adattatore per boschindego",
+		'fr': 'Paramètres d\'adaptateur pour boschindego',
+		'it': 'Impostazioni dell\'adattatore per boschindego',
 		'es': 'Ajustes del adaptador para boschindego',
 		'pl': 'Ustawienia adaptera dla boschindego',
 		'zh-cn': 'boschindego的适配器设置'
 	},
-	'username': {
+	'Username': {
 		'en': 'Username',
-		'de': 'Benutzername',
-		'ru': 'Username',
-		'pt': 'Username',
-		'nl': 'Username',
-		'fr': 'Username',
-		'it': 'Username',
-		'es': 'Username',
-		'pl': 'Username',
-		'zh-cn': 'Username'
+		'de': 'Nutzername',
+		'ru': 'Имя пользователя',
+		'pt': 'Nome do usuário',
+		'nl': 'Gebruikersnaam',
+		'fr': 'Nom d\'utilisateur',
+		'it': 'Nome utente',
+		'es': 'Nombre de usuario',
+		'pl': 'Nazwa Użytkownika',
+		'zh-cn': '用户名'
 	},
-	'password': {
+	'Password': {
 		'en': 'Password',
 		'de': 'Passwort',
-		'ru': 'Password',
-		'pt': 'Password',
-		'nl': 'Password',
-		'fr': 'Password',
-		'it': 'Password',
-		'es': 'Password',
-		'pl': 'Password',
-		'zh-cn': 'Password'
+		'ru': 'Пароль',
+		'pt': 'Senha',
+		'nl': 'Wachtwoord',
+		'fr': 'Mot de passe',
+		'it': 'Parola d\'ordine',
+		'es': 'Contraseña',
+		'pl': 'Hasło',
+		'zh-cn': '密码'
 	},
 
 	"deepSleepAtNight": {
