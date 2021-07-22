@@ -293,7 +293,7 @@ class Boschindego extends utils.Adapter {
             type: 'state',
             common: {
                 name: 'mapSVG',
-                type: 'number',
+                type: 'string',
                 min: 0,
                 max: 100,
                 role: 'value',
@@ -306,7 +306,7 @@ class Boschindego extends utils.Adapter {
             type: 'state',
             common: {
                 name: 'mapSVGwithIndego',
-                type: 'number',
+                type: 'string',
                 min: 0,
                 max: 100,
                 role: 'value',
@@ -352,7 +352,7 @@ class Boschindego extends utils.Adapter {
             type: 'state',
             common: {
                 name: 'error_code',
-                type: 'number',
+                type: 'string',
                 role: 'value',
                 read: true,
                 write: false,
@@ -407,7 +407,7 @@ class Boschindego extends utils.Adapter {
             type: 'state',
             common: {
                 name: 'alm_sn',
-                type: 'number',
+                type: 'string',
                 role: 'value',
                 read: true,
                 write: false,
