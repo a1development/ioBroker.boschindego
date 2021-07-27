@@ -1012,6 +1012,8 @@ class Boschindego extends utils.Adapter {
 					await this.getMap();
 					this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
 				}
+				this.getOperatingData();
+				this.getAlerts();
 			}).catch(err => {
 				this.log.error('connection error');
 				if (typeof err.response !== 'undefined' && err.response.status == 401) {
@@ -1023,10 +1025,7 @@ class Boschindego extends utils.Adapter {
 					this.setStateAsync('info.connection', false, true);
 					this.connect(this.config.username, this.config.password, true);
 				}
-
 			});
-			this.getOperatingData();
-			this.getAlerts();
 		} else {
 			this.connect(this.config.username, this.config.password, true);
 		}
