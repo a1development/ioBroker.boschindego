@@ -1005,7 +1005,7 @@ class Boschindego extends utils.Adapter {
 						stateUnknow = false;
 						if ( state[2] == 1) {
 							botIsMoving = true;
-							notMovingCount = 0; 
+							notMovingCount = 0;
 						} else {
 							if (notMovingCount == 0) {
 								// update map, bot stopped
