@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.11",
+		"version": "0.9.12",
 		"news": {
+			"0.9.12": {
+				"en": "Request efficency with longpolling. Battery optimizations.",
+				"de": "Effizientere Serverabfragen. Akku optimierungen."
+			},
 			"0.9.11": {
 				"en": "Added Alerts, state refresh ( credits: withstu )",
 				"de": "Benachrichtigungen und manuelles Status update ( credits: withstu )"

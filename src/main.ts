@@ -27,6 +27,7 @@ let automaticStateRefresh = true;
 let botIsMoving = true;
 
 let connected = false;
+let requestRunning = false;
 let firstRun = true;
 let notMovingCount = 0;
 let interval1: ReturnType<typeof setInterval>;
@@ -748,7 +749,7 @@ class Boschindego extends utils.Adapter {
 			if (refreshMode == 1 && automaticStateRefresh) {
 				this.connect(this.config.username, this.config.password, false);
 				// this.checkAuth(this.config.username, this.config.password);
-				this.refreshState();
+				this.refreshState(false);
 			}
 			if (botIsMoving == false) {
 				refreshMode = 2;
@@ -772,20 +773,20 @@ class Boschindego extends utils.Adapter {
 				refreshMode = 1;
 			}
 		}
-		,45000)
+		,20000)
 
 		interval2 = setInterval(()=> {
 			if (refreshMode == 2 && automaticStateRefresh) {
 				this.connect(this.config.username, this.config.password, false);
-				this.refreshState();
+				this.refreshState(false);
 			}
 		}
-		,90000)
+		,60000)
 
 		interval3 = setInterval(()=> {
 			if (refreshMode == 3 && this.config.deepSleepAtNight == false && automaticStateRefresh) {
 				this.connect(this.config.username, this.config.password, false);
-				this.refreshState();
+				this.refreshState(false);
 			}
 		}
 		,1800000)
@@ -820,7 +821,7 @@ class Boschindego extends utils.Adapter {
 				this.goHome();
 			}
 			if (id.indexOf('refresh_state') >= 0) {
-				this.refreshState();
+				this.refreshState(true);
 			}
 			if (id.indexOf('clear_alerts') >= 0) {
 				this.clearAlerts();
@@ -861,7 +862,7 @@ class Boschindego extends utils.Adapter {
 				connected = true;
 				this.setStateAsync('info.connection', true, true);
 				this.setForeignState('system.adapter.' + this.namespace + '.alive', true);
-				this.refreshState();
+				this.refreshState(false);
 			}).catch(err => {
 				// this.log.error(JSON.stringify(err));
 				this.log.debug('connection error: ' + err);
@@ -906,7 +907,7 @@ class Boschindego extends utils.Adapter {
 			this.log.error('error in mow request: ' + err);
 		});
 		this.clearAlerts();
-		this.refreshState();
+		this.refreshState(false);
 	}
 
 	private goHome(): void{
@@ -924,7 +925,7 @@ class Boschindego extends utils.Adapter {
 			this.log.error('error in returnToDock request: ' + err);
 		});
 		this.clearAlerts();
-		this.refreshState();
+		this.refreshState(false);
 	}
 
 	private pause(): void{
@@ -942,36 +943,59 @@ class Boschindego extends utils.Adapter {
 			this.log.error('error in pause request: ' + err);
 		});
 		this.clearAlerts();
-		this.refreshState();
+		this.refreshState(false);
 	}
 
-	private refreshState(): void{
-		if(connected) {
-			this.log.debug('refresh state');
+	private refreshState(force: boolean): void{
+		if (connected && (botIsMoving || force || (currentStateCode == 257 || currentStateCode == 260))) { // if bot moves or is charging, get data. Prevents weaking up the bot
+			this.getOperatingData();
+		}
+		if(connected && (requestRunning == false || force)) {
+			requestRunning = true;
+			let timeout = 30000;
+			let last = currentStateCode;
+			if (last == undefined) {
+				last = 0;
+			}
+			let forceUrl = '';
+			if (refreshMode == 1 || force == true) {
+				this.log.debug('state - force - refreshMode: ' + refreshMode);
+				forceUrl = '?cached=false&force=true';
+			} else {
+				this.log.debug('refresh state - longPoll - refreshMode: ' + refreshMode);
+				timeout = 3650000;
+				forceUrl = `?longpoll=true&timeout=3600&last=${last}`;
+			}
 			axios({
 				method: 'GET',
-				url: `${URL}alms/${alm_sn}/state?cached=false&force=true`,
+				url: `${URL}alms/${alm_sn}/state${forceUrl}`,
 				headers: {
 					'x-im-context-id': `${contextId}`
-				}
+				},
+				timeout: timeout
 			}).then(async res => {
+				requestRunning = false;
 				this.log.debug('[State Data] ' + JSON.stringify(res.data));
 
 				await this.setStateAsync('state.state', { val: res.data.state, ack: true });
 				await this.setStateAsync('state.map_update_available', { val: res.data.map_update_available, ack: true });
-				await this.setStateAsync('state.mowed', { val: res.data.mowed, ack: true });
-				await this.setStateAsync('state.mowmode', { val: res.data.mowmode, ack: true });
-				await this.setStateAsync('state.xPos', { val: res.data.xPos, ack: true });
-				await this.setStateAsync('state.yPos', { val: res.data.yPos, ack: true });
-				await this.setStateAsync('state.runtime.total.operate', { val: res.data.runtime.total.operate, ack: true });
-				await this.setStateAsync('state.runtime.total.charge', { val: res.data.runtime.total.charge, ack: true });
-				await this.setStateAsync('state.runtime.session.operate', { val: res.data.runtime.session.operate, ack: true });
-				await this.setStateAsync('state.runtime.session.charge', { val: res.data.runtime.session.charge, ack: true });
+				if (typeof(res.data.mowed) !== 'undefined') {
+					await this.setStateAsync('state.mowed', { val: res.data.mowed, ack: true });
+					await this.setStateAsync('state.mowmode', { val: res.data.mowmode, ack: true });
+					await this.setStateAsync('state.xPos', { val: res.data.xPos, ack: true });
+					await this.setStateAsync('state.yPos', { val: res.data.yPos, ack: true });
+					await this.setStateAsync('state.runtime.total.operate', { val: res.data.runtime.total.operate, ack: true });
+					await this.setStateAsync('state.runtime.total.charge', { val: res.data.runtime.total.charge, ack: true });
+					await this.setStateAsync('state.runtime.session.operate', { val: res.data.runtime.session.operate, ack: true });
+					await this.setStateAsync('state.runtime.session.charge', { val: res.data.runtime.session.charge, ack: true });
+					await this.setStateAsync('state.config_change', { val: res.data.config_change, ack: true });
+					await this.setStateAsync('state.mow_trig', { val: res.data.mow_trig, ack: true });
+				}
+
 				await this.setStateAsync('state.mapsvgcache_ts', { val: res.data.mapsvgcache_ts, ack: true });
 				await this.setStateAsync('state.svg_xPos', { val: res.data.svg_xPos, ack: true });
 				await this.setStateAsync('state.svg_yPos', { val: res.data.svg_yPos, ack: true });
-				await this.setStateAsync('state.config_change', { val: res.data.config_change, ack: true });
-				await this.setStateAsync('state.mow_trig', { val: res.data.mow_trig, ack: true });
+
 
 				let stateText = `${res.data.state} - state unknown`;
 				let stateUnknow = true;
@@ -981,7 +1005,7 @@ class Boschindego extends utils.Adapter {
 						stateUnknow = false;
 						if ( state[2] == 1) {
 							botIsMoving = true;
-							notMovingCount = 0;
+							notMovingCount = 0; 
 						} else {
 							if (notMovingCount == 0) {
 								// update map, bot stopped
@@ -996,7 +1020,6 @@ class Boschindego extends utils.Adapter {
 						if (state[2] === 1 && firstRun === false) {
 							// bot is moving
 							this.log.debug('bot is moving, update map');
-
 							await this.getMap();
 							this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
 						}
@@ -1005,6 +1028,7 @@ class Boschindego extends utils.Adapter {
 				if (stateUnknow) {
 					this.log.warn(stateText + '. Please check the state of the mower in your app and report both to the adapter developer');
 				}
+				this.getAlerts();
 				await this.setStateAsync('state.stateText', { val: stateText, ack: true });
 				this.stateCodeChange(res.data.state);
 				if (firstRun) {
@@ -1013,22 +1037,27 @@ class Boschindego extends utils.Adapter {
 					this.createMapWithIndego(res.data.svg_xPos, res.data.svg_yPos);
 				}
 			}).catch(err => {
-				this.log.error('connection error');
+				requestRunning = false;
 				if (typeof err.response !== 'undefined' && err.response.status == 401) {
+					this.log.error('connection error'  + JSON.stringify(err));
 					connected = false;
-					this.setStateAsync('info.connection', false, true);
+					// this.setStateAsync('info.connection', false, true); will be handelt in connect() function on connection failure
 					this.connect(this.config.username, this.config.password, true);
+				} else if ((typeof err.response !== 'undefined' && err.response.status == 504) || (typeof err.code !== 'undefined' && err.code == 'ECONNRESET')) {
+					// expected behavior by longpoll requests
+					this.log.debug('planned longpoll timeout');
 				} else {
+					this.log.error('connection error'  + JSON.stringify(err));
 					connected = false;
-					this.setStateAsync('info.connection', false, true);
+					// this.setStateAsync('info.connection', false, true); will be handelt in connect() function on connection failure
 					this.connect(this.config.username, this.config.password, true);
 				}
 
 			});
-			this.getOperatingData();
-			this.getAlerts();
-		} else {
+		} else if (requestRunning == false) {
 			this.connect(this.config.username, this.config.password, true);
+		} else if (requestRunning == true) {
+			this.log.debug('longpoll request running');
 		}
   	}
 	private getMachine(): void{
@@ -1184,7 +1213,7 @@ class Boschindego extends utils.Adapter {
 				firstRun = true; // get current location when returned to dock
 			}
 		}
-		if (state == 258) {
+		if (botIsMoving == false) { //state == 258
 			refreshMode = 2;
 			const d = new Date();
 			const n = d.getHours();
