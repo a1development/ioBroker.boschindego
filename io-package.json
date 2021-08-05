@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.12",
+		"version": "0.9.13",
 		"news": {
+			"0.9.13": {
+				"en": "Bugfixes.",
+				"de": "Bugfixes."
+			},
 			"0.9.12": {
 				"en": "Request efficency with longpolling. Battery optimizations.",
 				"de": "Effizientere Serverabfragen. Akku optimierungen."

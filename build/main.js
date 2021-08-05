@@ -1019,7 +1019,8 @@ class Boschindego extends utils.Adapter {
             }).catch(err => {
                 requestRunning = false;
                 if (typeof err.response !== 'undefined' && err.response.status == 401) {
-                    this.log.error('connection error' + JSON.stringify(err));
+                    // expected behavior after auth is expired -> reconnect
+                    // this.log.error('connection error'  + JSON.stringify(err));
                     connected = false;
                     // this.setStateAsync('info.connection', false, true); will be handelt in connect() function on connection failure
                     this.connect(this.config.username, this.config.password, true);
@@ -1029,7 +1030,7 @@ class Boschindego extends utils.Adapter {
                     this.log.debug('planned longpoll timeout');
                 }
                 else {
-                    this.log.error('connection error' + JSON.stringify(err));
+                    // this.log.error('connection error'  + JSON.stringify(err));
                     connected = false;
                     // this.setStateAsync('info.connection', false, true); will be handelt in connect() function on connection failure
                     this.connect(this.config.username, this.config.password, true);
@@ -1061,6 +1062,8 @@ class Boschindego extends utils.Adapter {
             await this.setStateAsync('machine.alm_firmware_version', { val: res.data.alm_firmware_version, ack: true });
         }).catch(err => {
             this.log.error('error in machine request: ' + err);
+            connected = false;
+            this.connect(this.config.username, this.config.password, true);
         });
     }
     getOperatingData() {
@@ -1091,6 +1094,8 @@ class Boschindego extends utils.Adapter {
             await this.setStateAsync('operationData.garden.map_cell_size', { val: res.data.garden.map_cell_size, ack: true });
         }).catch(err => {
             this.log.error('error in operatingData request: ' + err);
+            connected = false;
+            this.connect(this.config.username, this.config.password, true);
         });
     }
     clearAlerts() {
@@ -1157,6 +1162,9 @@ class Boschindego extends utils.Adapter {
             await this.setStateAsync('map.mapSVG', { val: res.data, ack: true });
         }).catch(err => {
             this.log.error('error in map request: ' + err);
+            connected = false;
+            // this.setStateAsync('info.connection', false, true); will be handelt in connect() function on connection failure
+            this.connect(this.config.username, this.config.password, true);
         });
         return;
     }
