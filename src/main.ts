@@ -28,6 +28,12 @@ let botIsMoving = true;
 
 let connected = false;
 let requestRunning = false;
+let requestGetOperationData = false;
+let requestGetMachineData = false;
+let requestGetAlerts = false;
+let requestGetMap = false;
+let requestConnect  = false;
+
 let firstRun = true;
 let notMovingCount = 0;
 let interval1: ReturnType<typeof setInterval>;
@@ -840,38 +846,43 @@ class Boschindego extends utils.Adapter {
 	}
 
 	private connect(username: string,password: string, force: boolean): void {
-		if (connected == false || force == true) {
-			this.log.info('connect');
-			const buff = Buffer.from(username + ':' + password, 'utf-8');
-			const base64 = buff.toString('base64');
-			axios({
-				method: 'POST',
-				url: `${URL}authenticate`,
-				headers: {
-					'Authorization': `Basic ${base64}`,
-					'Content-Type': 'application/json'
-				},
-				data: {device:'', os_type:'Android', os_version:'4.0', dvc_manuf:'unknown', dvc_type:'unknown'}
-			}).then(res => {
-				this.log.info('connect ok');
-				this.log.debug('connect data: ' + res.data);
+		if (requestConnect === false) {
+			if (connected == false || force == true) {
+				this.log.info('connect');
+				const buff = Buffer.from(username + ':' + password, 'utf-8');
+				const base64 = buff.toString('base64');
+				requestConnect = true;
+				axios({
+					method: 'POST',
+					url: `${URL}authenticate`,
+					headers: {
+						'Authorization': `Basic ${base64}`,
+						'Content-Type': 'application/json'
+					},
+					data: {device:'', os_type:'Android', os_version:'4.0', dvc_manuf:'unknown', dvc_type:'unknown'}
+				}).then(res => {
+					requestConnect = false;
+					this.log.info('connect ok');
+					this.log.debug('connect data: ' + res.data);
 
-				contextId = res.data.contextId;
-				// userId = res.data.userId;
-				alm_sn = res.data.alm_sn;
-				connected = true;
-				this.setStateAsync('info.connection', true, true);
-				this.setForeignState('system.adapter.' + this.namespace + '.alive', true);
-				this.refreshState(false);
-			}).catch(err => {
-				// this.log.error(JSON.stringify(err));
-				this.log.debug('connection error: ' + err);
-				this.log.error('connection error - credentials wrong or no network?');
-				connected = false;
-				this.setStateAsync('info.connection', false, true);
-				// this.setForeignState('system.adapter.' + this.namespace + '.alive', false);
-				// this.terminate('Connection error. Credentials wrong?',0);
-			});
+					contextId = res.data.contextId;
+					// userId = res.data.userId;
+					alm_sn = res.data.alm_sn;
+					connected = true;
+					this.setStateAsync('info.connection', true, true);
+					this.setForeignState('system.adapter.' + this.namespace + '.alive', true);
+					this.refreshState(false);
+				}).catch(err => {
+					requestConnect = false;
+					// this.log.error(JSON.stringify(err));
+					this.log.debug('connection error: ' + err);
+					this.log.error('connection error - credentials wrong or no network?');
+					connected = false;
+					this.setStateAsync('info.connection', false, true);
+					// this.setForeignState('system.adapter.' + this.namespace + '.alive', false);
+					// this.terminate('Connection error. Credentials wrong?',0);
+				});
+			}
 		}
 	}
 
@@ -1062,61 +1073,73 @@ class Boschindego extends utils.Adapter {
 		}
   	}
 	private getMachine(): void{
-		this.log.debug('machine');
-		axios({
-			method: 'GET',
-			url: `${URL}alms/${alm_sn}`,
-			headers: {
-				'x-im-context-id': `${contextId}`
-			}
-		}).then(async res => {
-			this.log.debug('[Machine Data] ' + JSON.stringify(res.data));
-
-			await this.setStateAsync('machine.alm_sn', { val: res.data.alm_sn, ack: true });
-			await this.setStateAsync('machine.alm_mode', { val: res.data.alm_mode, ack: true });
-			await this.setStateAsync('machine.service_counter', { val: res.data.service_counter, ack: true });
-			await this.setStateAsync('machine.needs_service', { val: res.data.needs_service, ack: true });
-			await this.setStateAsync('machine.bare_tool_number', { val: res.data.bareToolnumber, ack: true });
-			await this.setStateAsync('machine.alm_firmware_version', { val: res.data.alm_firmware_version, ack: true });
-		}).catch(err => {
-			this.log.error('error in machine request: ' + err);
-			connected = false;
-			// this.connect(this.config.username, this.config.password, true);
-		});
+		if (requestGetMachineData === false) {
+			this.log.debug('machine');
+			requestGetMachineData = true;
+			axios({
+				method: 'GET',
+				url: `${URL}alms/${alm_sn}`,
+				headers: {
+					'x-im-context-id': `${contextId}`
+				}
+			}).then(async res => {
+				this.log.debug('[Machine Data] ' + JSON.stringify(res.data));
+				requestGetMachineData = false;
+				await this.setStateAsync('machine.alm_sn', { val: res.data.alm_sn, ack: true });
+				await this.setStateAsync('machine.alm_mode', { val: res.data.alm_mode, ack: true });
+				await this.setStateAsync('machine.service_counter', { val: res.data.service_counter, ack: true });
+				await this.setStateAsync('machine.needs_service', { val: res.data.needs_service, ack: true });
+				await this.setStateAsync('machine.bare_tool_number', { val: res.data.bareToolnumber, ack: true });
+				await this.setStateAsync('machine.alm_firmware_version', { val: res.data.alm_firmware_version, ack: true });
+			}).catch(err => {
+				this.log.error('error in machine request: ' + err);
+				connected = false;
+				requestGetMachineData = false;
+				// this.connect(this.config.username, this.config.password, true);
+			});
+		} else {
+			this.log.debug('skipped - machine request still running');
+		}
 	}
 	private getOperatingData(): void{
-		this.log.debug('operating data');
-		axios({
-			method: 'GET',
-			url: `${URL}alms/${alm_sn}/operatingData`,
-			headers: {
-				'x-im-context-id': `${contextId}`
-			}
-		}).then(async res => {
-			this.log.debug('[Operating Data] ' + JSON.stringify(res.data));
+		if (requestGetOperationData === false) {
+			this.log.debug('operating data');
+			requestGetOperationData = true;
+			axios({
+				method: 'GET',
+				url: `${URL}alms/${alm_sn}/operatingData`,
+				headers: {
+					'x-im-context-id': `${contextId}`
+				}
+			}).then(async res => {
+				this.log.debug('[Operating Data] ' + JSON.stringify(res.data));
+				requestGetOperationData = false;
+				await this.setStateAsync('operationData.battery.voltage', { val: res.data.battery.voltage, ack: true });
+				await this.setStateAsync('operationData.battery.cycles', { val: res.data.battery.cycles, ack: true });
+				await this.setStateAsync('operationData.battery.discharge', { val: res.data.battery.discharge, ack: true });
+				await this.setStateAsync('operationData.battery.ambient_temp', { val: res.data.battery.ambient_temp, ack: true });
+				await this.setStateAsync('operationData.battery.battery_temp', { val: res.data.battery.battery_temp, ack: true });
+				await this.setStateAsync('operationData.battery.percent', { val: res.data.battery.percent, ack: true });
 
-			await this.setStateAsync('operationData.battery.voltage', { val: res.data.battery.voltage, ack: true });
-			await this.setStateAsync('operationData.battery.cycles', { val: res.data.battery.cycles, ack: true });
-			await this.setStateAsync('operationData.battery.discharge', { val: res.data.battery.discharge, ack: true });
-			await this.setStateAsync('operationData.battery.ambient_temp', { val: res.data.battery.ambient_temp, ack: true });
-			await this.setStateAsync('operationData.battery.battery_temp', { val: res.data.battery.battery_temp, ack: true });
-			await this.setStateAsync('operationData.battery.percent', { val: res.data.battery.percent, ack: true });
-
-			await this.setStateAsync('operationData.garden.signal_id', {val: res.data.garden.signal_id, ack: true });
-			await this.setStateAsync('operationData.garden.size', {val: res.data.garden.size, ack: true });
-			await this.setStateAsync('operationData.garden.inner_bounds', {val: res.data.garden.inner_bounds, ack: true });
-			await this.setStateAsync('operationData.garden.cuts', {val: res.data.garden.cuts, ack: true });
-			await this.setStateAsync('operationData.garden.runtime', {val: res.data.garden.runtime, ack: true });
-			await this.setStateAsync('operationData.garden.charge', {val: res.data.garden.charge, ack: true });
-			await this.setStateAsync('operationData.garden.bumps', {val: res.data.garden.bumps, ack: true });
-			await this.setStateAsync('operationData.garden.stops', {val: res.data.garden.stops, ack: true });
-			await this.setStateAsync('operationData.garden.last_mow', {val: res.data.garden.last_mow, ack: true });
-			await this.setStateAsync('operationData.garden.map_cell_size', {val: res.data.garden.map_cell_size, ack: true });
-		}).catch(err => {
-			this.log.error('error in operatingData request: ' + err);
-			connected = false;
-			// this.connect(this.config.username, this.config.password, true);
-		});
+				await this.setStateAsync('operationData.garden.signal_id', {val: res.data.garden.signal_id, ack: true });
+				await this.setStateAsync('operationData.garden.size', {val: res.data.garden.size, ack: true });
+				await this.setStateAsync('operationData.garden.inner_bounds', {val: res.data.garden.inner_bounds, ack: true });
+				await this.setStateAsync('operationData.garden.cuts', {val: res.data.garden.cuts, ack: true });
+				await this.setStateAsync('operationData.garden.runtime', {val: res.data.garden.runtime, ack: true });
+				await this.setStateAsync('operationData.garden.charge', {val: res.data.garden.charge, ack: true });
+				await this.setStateAsync('operationData.garden.bumps', {val: res.data.garden.bumps, ack: true });
+				await this.setStateAsync('operationData.garden.stops', {val: res.data.garden.stops, ack: true });
+				await this.setStateAsync('operationData.garden.last_mow', {val: res.data.garden.last_mow, ack: true });
+				await this.setStateAsync('operationData.garden.map_cell_size', {val: res.data.garden.map_cell_size, ack: true });
+			}).catch(err => {
+				this.log.error('error in operatingData request 2: ' + err);
+				connected = false;
+				requestGetOperationData = false;
+				// this.connect(this.config.username, this.config.password, true);
+			});
+		} else {
+			this.log.debug('skipped - operating data request still running');
+		}
 	}
 
 	private clearAlerts(): void{
@@ -1146,54 +1169,67 @@ class Boschindego extends utils.Adapter {
 	}
 
 	private async getAlerts(): Promise<any>{
-		this.log.debug('alerts');
-		return axios({
-			method: 'GET',
-			url: `${URL}alerts`,
-			headers: {
-				'x-im-context-id': `${contextId}`
-			}
-		}).then(async res => {
-			this.log.debug('[Alert Data] ' + JSON.stringify(res.data));
+		if (requestGetAlerts === false) {
+			requestGetAlerts = true;
+			this.log.debug('alerts');
+			return axios({
+				method: 'GET',
+				url: `${URL}alerts`,
+				headers: {
+					'x-im-context-id': `${contextId}`
+				}
+			}).then(async res => {
+				this.log.debug('[Alert Data] ' + JSON.stringify(res.data));
+				requestGetAlerts = false;
+				const alertArray = res.data;
 
-			const alertArray = res.data;
+				await this.setStateAsync('alerts.list', { val: JSON.stringify(alertArray), ack: true });
+				await this.setStateAsync('alerts.count', { val: alertArray.length, ack: true });
+				await this.setStateAsync('alerts.error', { val: alertArray.length > 0, ack: true });
 
-			await this.setStateAsync('alerts.list', { val: JSON.stringify(alertArray), ack: true });
-			await this.setStateAsync('alerts.count', { val: alertArray.length, ack: true });
-			await this.setStateAsync('alerts.error', { val: alertArray.length > 0, ack: true });
-
-			if (alertArray.length > 0) {
-				await this.setStateAsync('alerts.last.error_code', { val: alertArray[0].error_code, ack: true });
-				await this.setStateAsync('alerts.last.headline', { val: alertArray[0].headline, ack: true });
-				await this.setStateAsync('alerts.last.date', { val: alertArray[0].date, ack: true });
-				await this.setStateAsync('alerts.last.message', { val: alertArray[0].message, ack: true });
-				await this.setStateAsync('alerts.last.flag', { val: alertArray[0].flag, ack: true });
-			}
-			return res;
-		}).catch(err => {
-			this.log.error('error in alerts request: ' + err);
-			return Promise.reject(err);
-		});
+				if (alertArray.length > 0) {
+					await this.setStateAsync('alerts.last.error_code', { val: alertArray[0].error_code, ack: true });
+					await this.setStateAsync('alerts.last.headline', { val: alertArray[0].headline, ack: true });
+					await this.setStateAsync('alerts.last.date', { val: alertArray[0].date, ack: true });
+					await this.setStateAsync('alerts.last.message', { val: alertArray[0].message, ack: true });
+					await this.setStateAsync('alerts.last.flag', { val: alertArray[0].flag, ack: true });
+				}
+				return res;
+			}).catch(err => {
+				this.log.error('error in alerts request: ' + err);
+				requestGetAlerts = false;
+				return Promise.reject(err);
+			});
+		} else {
+			this.log.debug('skipped - alerts request still running');
+		}
 	}
 
 
 	private async getMap(): Promise<void>{
-		this.log.debug('get map');
-		axios({
-			method: 'GET',
-			url: `${URL}alms/${alm_sn}/map?cached=false&force=true`,
-			headers: {
-				'x-im-context-id': `${contextId}`
-			}
-		}).then(async res => {
-			await this.setStateAsync('map.mapSVG', { val: res.data, ack: true });
-		}).catch(err => {
-			this.log.error('error in map request: ' + err);
-			connected = false;
-			// this.setStateAsync('info.connection', false, true); will be handelt in connect() function on connection failure
-			this.connect(this.config.username, this.config.password, true);
-		});
-		return;
+		if (requestGetMap === false ) {
+			requestGetMap = true;
+			this.log.debug('get map');
+			axios({
+				method: 'GET',
+				url: `${URL}alms/${alm_sn}/map?cached=false&force=true`,
+				headers: {
+					'x-im-context-id': `${contextId}`
+				}
+			}).then(async res => {
+				await this.setStateAsync('map.mapSVG', { val: res.data, ack: true });
+				requestGetMap = false;
+			}).catch(err => {
+				this.log.error('error in map request: ' + err);
+				connected = false;
+				requestGetMap = false;
+				// this.setStateAsync('info.connection', false, true); will be handelt in connect() function on connection failure
+				// this.connect(this.config.username, this.config.password, true);
+			});
+			return;
+		} else {
+			this.log.debug('skipped - get map request still running');
+		}
 	}
 
 	private async createMapWithIndego(x: number, y:number): Promise<void> {

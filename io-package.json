@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.14",
+		"version": "0.9.15",
 		"news": {
+			"0.9.15": {
+				"en": "Bugfixes.",
+				"de": "Bugfixes."
+			},
 			"0.9.14": {
 				"en": "Bugfixes.",
 				"de": "Bugfixes."
