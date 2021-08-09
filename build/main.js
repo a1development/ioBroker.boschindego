@@ -751,20 +751,20 @@ class Boschindego extends utils.Adapter {
                 const n = d.getHours();
                 if (n >= 22 || n < 7) {
                     if (refreshMode != 3) {
-                        this.log.info('Switch to refresh mode 3');
+                        // this.log.info('Switch to refresh mode 3');
                     }
                     refreshMode = 3;
                 }
                 else {
                     if (refreshMode != 2) {
-                        this.log.info('Switch to refresh mode 2');
+                        // this.log.info('Switch to refresh mode 2');
                     }
                     refreshMode = 2;
                 }
             }
             else {
                 if (refreshMode != 1) {
-                    this.log.info('Switch to refresh mode 1');
+                    // this.log.info('Switch to refresh mode 1');
                 }
                 refreshMode = 1;
             }
@@ -1023,7 +1023,7 @@ class Boschindego extends utils.Adapter {
                     // this.log.error('connection error'  + JSON.stringify(err));
                     connected = false;
                     // this.setStateAsync('info.connection', false, true); will be handelt in connect() function on connection failure
-                    this.connect(this.config.username, this.config.password, true);
+                    // this.connect(this.config.username, this.config.password, true);
                 }
                 else if ((typeof err.response !== 'undefined' && err.response.status == 504) || (typeof err.code !== 'undefined' && err.code == 'ECONNRESET')) {
                     // expected behavior by longpoll requests
@@ -1063,7 +1063,7 @@ class Boschindego extends utils.Adapter {
         }).catch(err => {
             this.log.error('error in machine request: ' + err);
             connected = false;
-            this.connect(this.config.username, this.config.password, true);
+            // this.connect(this.config.username, this.config.password, true);
         });
     }
     getOperatingData() {
@@ -1095,7 +1095,7 @@ class Boschindego extends utils.Adapter {
         }).catch(err => {
             this.log.error('error in operatingData request: ' + err);
             connected = false;
-            this.connect(this.config.username, this.config.password, true);
+            // this.connect(this.config.username, this.config.password, true);
         });
     }
     clearAlerts() {
