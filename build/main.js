@@ -1114,8 +1114,12 @@ class Boschindego extends utils.Adapter {
                 await this.setStateAsync('operationData.garden.last_mow', { val: res.data.garden.last_mow, ack: true });
                 await this.setStateAsync('operationData.garden.map_cell_size', { val: res.data.garden.map_cell_size, ack: true });
             }).catch(err => {
-                this.log.error('error in operatingData request 2: ' + err);
-                connected = false;
+                if (typeof err.response !== 'undefined' && err.response.status == 504) {
+                    this.log.error('error in operatingData request: ' + err);
+                }
+                else {
+                    connected = false;
+                }
                 requestGetOperationData = false;
                 // this.connect(this.config.username, this.config.password, true);
             });

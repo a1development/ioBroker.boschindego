@@ -1,7 +1,7 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.15",
+		"version": "0.9.16",
 		"news": {
 			"0.9.15": {
 				"en": "Bugfixes.",
