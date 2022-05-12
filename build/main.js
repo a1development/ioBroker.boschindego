@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -839,7 +843,7 @@ class Boschindego extends utils.Adapter {
                 const buff = Buffer.from(username + ':' + password, 'utf-8');
                 const base64 = buff.toString('base64');
                 requestConnect = true;
-                axios_1.default({
+                (0, axios_1.default)({
                     method: 'GET',
                     url: `${URL}authenticate/check`,
                     headers: {
@@ -874,7 +878,7 @@ class Boschindego extends utils.Adapter {
     checkAuth(username, password) {
         const buff = Buffer.from(username + ':' + password, 'utf-8');
         const base64 = buff.toString('base64');
-        axios_1.default({
+        (0, axios_1.default)({
             method: 'GET',
             url: `${URL}authenticate/check`,
             headers: {
@@ -889,7 +893,7 @@ class Boschindego extends utils.Adapter {
     }
     mow() {
         this.log.info('mow command sent');
-        axios_1.default({
+        (0, axios_1.default)({
             method: 'PUT',
             url: `${URL}alms/${alm_sn}/state`,
             headers: {
@@ -906,7 +910,7 @@ class Boschindego extends utils.Adapter {
     }
     goHome() {
         this.log.info('return to dock command sent');
-        axios_1.default({
+        (0, axios_1.default)({
             method: 'PUT',
             url: `${URL}alms/${alm_sn}/state`,
             headers: {
@@ -923,7 +927,7 @@ class Boschindego extends utils.Adapter {
     }
     pause() {
         this.log.info('pause command sent');
-        axios_1.default({
+        (0, axios_1.default)({
             method: 'PUT',
             url: `${URL}alms/${alm_sn}/state`,
             headers: {
@@ -959,7 +963,7 @@ class Boschindego extends utils.Adapter {
                 timeout = 3650000;
                 forceUrl = `?longpoll=true&timeout=3600&last=${last}`;
             }
-            axios_1.default({
+            (0, axios_1.default)({
                 method: 'GET',
                 url: `${URL}alms/${alm_sn}/state${forceUrl}`,
                 headers: {
@@ -1058,7 +1062,7 @@ class Boschindego extends utils.Adapter {
         if (requestGetMachineData === false) {
             this.log.debug('machine');
             requestGetMachineData = true;
-            axios_1.default({
+            (0, axios_1.default)({
                 method: 'GET',
                 url: `${URL}alms/${alm_sn}`,
                 headers: {
@@ -1088,7 +1092,7 @@ class Boschindego extends utils.Adapter {
         if (requestGetOperationData === false) {
             this.log.debug('operating data');
             requestGetOperationData = true;
-            axios_1.default({
+            (0, axios_1.default)({
                 method: 'GET',
                 url: `${URL}alms/${alm_sn}/operatingData`,
                 headers: {
@@ -1134,7 +1138,7 @@ class Boschindego extends utils.Adapter {
             const alertArray = res.data;
             if (alertArray.length > 0) {
                 await alertArray.forEach((alert) => {
-                    axios_1.default({
+                    (0, axios_1.default)({
                         method: 'DELETE',
                         url: `${URL}alerts/${alert.alert_id}`,
                         headers: {
@@ -1157,7 +1161,7 @@ class Boschindego extends utils.Adapter {
         if (requestGetAlerts === false) {
             requestGetAlerts = true;
             this.log.debug('alerts');
-            return axios_1.default({
+            return (0, axios_1.default)({
                 method: 'GET',
                 url: `${URL}alerts`,
                 headers: {
@@ -1192,7 +1196,7 @@ class Boschindego extends utils.Adapter {
         if (requestGetMap === false) {
             requestGetMap = true;
             this.log.debug('get map');
-            axios_1.default({
+            (0, axios_1.default)({
                 method: 'GET',
                 url: `${URL}alms/${alm_sn}/map?cached=false&force=true`,
                 headers: {
