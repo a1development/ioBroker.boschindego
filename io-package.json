@@ -1,8 +1,12 @@
 {
 	"common": {
 		"name": "boschindego",
-		"version": "0.9.16",
+		"version": "0.9.17",
 		"news": {
+			"0.9.17": {
+				"en": "Bugfixes. Bosch API Changes",
+				"de": "Bugfixes. Bosch API Changes"
+			},
 			"0.9.15": {
 				"en": "Bugfixes.",
 				"de": "Bugfixes."
