@@ -853,13 +853,13 @@ class Boschindego extends utils.Adapter {
 				const base64 = buff.toString('base64');
 				requestConnect = true;
 				axios({
-					method: 'POST',
-					url: `${URL}authenticate`,
+					method: 'GET',
+					url: `${URL}authenticate/check`,
 					headers: {
 						'Authorization': `Basic ${base64}`,
 						'Content-Type': 'application/json'
 					},
-					data: {device:'', os_type:'Android', os_version:'4.0', dvc_manuf:'unknown', dvc_type:'unknown'}
+					data: {device:'', os_type:'Android', os_version:'11.0', dvc_manuf:'unknown', dvc_type:'unknown'}
 				}).then(res => {
 					requestConnect = false;
 					this.log.info('connect ok');
