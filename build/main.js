@@ -861,7 +861,7 @@ class Boschindego extends utils.Adapter {
                 }).catch(err => {
                     requestConnect = false;
                     // this.log.error(JSON.stringify(err));
-                    this.log.debug('connection error: ' + err);
+                    this.log.debug('connection error 2: ' + err);
                     this.log.error('connection error - credentials wrong or no network?');
                     connected = false;
                     this.setStateAsync('info.connection', false, true);
