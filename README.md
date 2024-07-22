@@ -1,3 +1,7 @@
+[DEPRECIATION NOTICE]
+After many problems with this mover, and finaly a hardware defect, i had to stop using it and moved to another brand of mowers. 
+So this Adapter is not not maintained and as far as i know, broken after the auth method was changed by the company. 
+
 ![Logo](admin/boschindego.png)
 # ioBroker.boschindego
 
